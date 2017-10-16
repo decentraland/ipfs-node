@@ -40,4 +40,5 @@ Install build essentials
 
 	$ mkdir ~/ipfs-node
 
-Run `./deploy.sh`. You'll need a .pem file for the ec2 in the parent of this folder.
+Run `./deploy.sh`. You'll need a .pem file for the ec2 in the parent of this folder. You may get some
+errors from forever on first deploy but should deploy cleanly a second time.
