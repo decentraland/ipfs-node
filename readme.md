@@ -34,11 +34,25 @@ Install build essentials
 
 	$ sudo apt-get install build-essential
 
-*todo:* harden, set up strict iptables.
+*todo:* harden box.
+
+## Open ports
+
+Open 3000, 4001 and 8080 to your VR (use AWS security groups).
+
+## Start up ipfs daemon
+
+Allow gateway connections from public web.
+
+     $ ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+
+Todo: Set ipfs to start at startup. I'm not sure how to do this. For now run it with `start-stop-daemon`:
+
+	$ start-stop-daemon --start --background --pidfile /var/run/ipfs.pid --exec `which ipfs` -- daemon 
 
 ## Deploying
 
 	$ mkdir ~/ipfs-node
 
-Run `./deploy.sh`. You'll need a .pem file for the ec2 in the parent of this folder. You may get some
+Then run `./deploy.sh` locally. You'll need a .pem file for the ec2 in the parent of this folder. You may get some
 errors from forever on first deploy but should deploy cleanly a second time.
