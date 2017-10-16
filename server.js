@@ -1,7 +1,7 @@
 const express = require('express')
-const ipfsDownload = require('./server/ipfs')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const ipfsDownload = require('./ipfs-upload')
 
 const app = express()
 
