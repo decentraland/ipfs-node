@@ -1,14 +1,16 @@
 {
-  "name": "ipfs",
+  "name": "uploader",
   "version": "1.0.0",
   "description": "This is a node.js express app that uses the go-ipfs client (the js-ipfs client [doesn't support](https://github.com/ipfs/js-ipfs/pull/856) the DHT yet) to upload scenes to our IPFS node.",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "docker:build": "docker build . -t uploader:latest",
+    "docker:run": "docker run -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
+    "start": "node src/server.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "The Decentraland Team",
+  "license": "Apache-2.0",
   "dependencies": {
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
