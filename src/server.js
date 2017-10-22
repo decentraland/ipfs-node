@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const ipfsDownload = require('./ipfs-upload')
+const ipfsName = require('./ipfs-name')
 
 const app = express()
 
@@ -16,6 +17,7 @@ app.use(bodyParser.json({ limit: '100mb' }))
 app.post('/api/ipfs', (req, res) => {
   ipfsDownload(req, res)
 })
+app.post('/api/name', (new ipfsName()).handlePublish)
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('Listening on port 3000...')
