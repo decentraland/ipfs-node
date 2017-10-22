@@ -13,7 +13,7 @@ module.exports = class Data {
   }
   getTarget(name) {
     return new Promise((resolve, reject) => {
-      exec(`ipfs cat ${name}`, (err, stdout, stderr) => {
+      exec(`ipfs cat /ipfs/${name}/parcel.aframe`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
         return resolve(stdout)
       })

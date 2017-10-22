@@ -48,7 +48,8 @@ module.exports = class Names {
         if (!match) return reject('not found')
         exec(`ipfs name resolve ${match[1]}`, (err, stdout, stderr) => {
           if (err) return reject(stderr)
-          return resolve({ ipns: match[1], ipfs: stdout })
+          const ipfs = stdout.substr(6, stdout.length - 7)
+          return resolve({ ipns: match[1], ipfs })
         })
       })
     })
@@ -61,7 +62,11 @@ module.exports = class Names {
         if (err) {
           return reject(stderr)
         }
-        return resolve(stdout.match('to (\S+):')[1])
+        const match = stdout.match(new RegExp('to ([a-zA-Z0-9]+):'))
+        if (!match) {
+          return reject('No result found:' + stdout)
+        }
+        return resolve(match[1])
       })
     })
   }

@@ -45,7 +45,7 @@ class Bundle {
           }
 
           const added = stdout.split('\n').slice(-2)[0]
-          const url = 'ipfs:' + added.match(/added (\S+)/)[1]
+          const url = added.match(/added (\S+)/)[1]
           resolve(url)
         })
       })
