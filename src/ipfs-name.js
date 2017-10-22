@@ -42,9 +42,14 @@ module.exports = class Names {
 
   getTarget(name) {
     return new Promise((resolve, reject) => {
-      exec(`ipfs name resolve ${name}`, (err, stdout, stderr) => {
+      exec(`ipfs key list -l`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
-        return resolve(stdout)
+        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${name}`))
+        if (!match) return reject('not found')
+        exec(`ipfs name resolve ${match[1]}`, (err, stdout, stderr) => {
+          if (err) return reject(stderr)
+          return resolve({ ipns: match[1], ipfs: stdout })
+        })
       })
     })
   }
