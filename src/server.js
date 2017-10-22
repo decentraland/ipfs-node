@@ -17,7 +17,10 @@ app.use(bodyParser.json({ limit: '100mb' }))
 app.post('/api/ipfs', (req, res) => {
   ipfsDownload(req, res)
 })
-app.post('/api/name', (new ipfsName()).handlePublish)
+
+const names = new ipfsName()
+app.post('/api/name/:name/:content', names.publish)
+app.get('/api/name/:name', names.resolve)
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('Listening on port 3000...')
