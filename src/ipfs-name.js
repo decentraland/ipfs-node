@@ -1,6 +1,6 @@
 const exec = require('child_process').exec
 
-export default class Names {
+module.exports = class Names {
   constructor() {
     this.resolve = async (req, res) => {
       try {
