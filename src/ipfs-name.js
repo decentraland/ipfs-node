@@ -58,7 +58,7 @@ module.exports = class Names {
   async publishHash(name, hash) {
     await this.idempotentCreateKey(name)
     return new Promise((resolve, reject) => {
-      exec(`ipfs name publish --key ${name} ${hash}`, (err, stdout, stderr) => {
+      exec(`ipfs name publish --resolve=false --key ${name} ${hash}`, (err, stdout, stderr) => {
         if (err) {
           return reject(stderr)
         }
