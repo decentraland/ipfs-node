@@ -45,7 +45,7 @@ Install build essentials
 
 ## Open ports
 
-Open 3000, 4001 and 8080 to your VR (use AWS security groups).
+Open 3000, 4001 and 8080 to your VM (use AWS security groups).
 
 ## Start up ipfs daemon
 
