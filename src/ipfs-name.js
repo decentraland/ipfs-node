@@ -1,5 +1,6 @@
 const exec = require('child_process').exec
 const sanitize = require('./sanitize-name')
+const escapeShellArg = require('./escape-shell-arg')
 
 module.exports = class Names {
   constructor () {
@@ -27,7 +28,7 @@ module.exports = class Names {
 
   createKey (name) {
     return new Promise((resolve, reject) => {
-      exec(`ipfs key gen --type rsa --size 4096 ${name}`, (err, stdout, stderr) => {
+      exec(`ipfs key gen --type rsa --size 4096 ${escapeShellArg(name)}`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
         return resolve(stdout)
       })
@@ -50,9 +51,9 @@ module.exports = class Names {
     return new Promise((resolve, reject) => {
       exec(`ipfs key list -l`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
-        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${name}`))
+        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${escapeShellArg(name)}`))
         if (!match) return reject(new Error('not found'))
-        exec(`ipfs name resolve ${match[1]}`, (err, stdout, stderr) => {
+        exec(`ipfs name resolve ${escapeShellArg(match[1])}`, (err, stdout, stderr) => {
           if (err) return reject(stderr)
           const ipfs = stdout.substr(6, stdout.length - 7)
           return resolve({ ipns: match[1], ipfs })
@@ -64,7 +65,7 @@ module.exports = class Names {
   async publishHash (name, hash) {
     await this.idempotentCreateKey(name)
     return new Promise((resolve, reject) => {
-      exec(`ipfs name publish --resolve=false --key ${name} ${hash}`, (err, stdout, stderr) => {
+      exec(`ipfs name publish --resolve=false --key ${escapeShellArg(name)} ${escapeShellArg(hash)}`, (err, stdout, stderr) => {
         if (err) {
           return reject(stderr)
         }
