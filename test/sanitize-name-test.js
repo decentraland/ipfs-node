@@ -9,5 +9,6 @@ test('sanitize', (t) => {
   t.equal(sanitize('🍑'), '')
   t.equal(sanitize(12345), '12345')
   t.equal(sanitize({}), 'objectobject')
+  t.equal(sanitize('\'HAX\'\n\n\'HAX\'\r\r\n\n\'MAD HAX'), 'haxhaxmadhax')
   t.end()
 })
