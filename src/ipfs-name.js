@@ -1,10 +1,13 @@
 const exec = require('child_process').exec
+const sanitize = require('./sanitize-name')
 
 module.exports = class Names {
-  constructor() {
+  constructor () {
     this.resolve = async (req, res) => {
+      const name = sanitize(req.params.name)
+
       try {
-        const url = await this.getTarget(req.params.name)
+        const url = await this.getTarget(name)
         return res.json({ ok: true, url })
       } catch (error) {
         return res.json({ ok: false, error })
@@ -22,7 +25,7 @@ module.exports = class Names {
     }
   }
 
-  createKey(name) {
+  createKey (name) {
     return new Promise((resolve, reject) => {
       exec(`ipfs key gen --type rsa --size 4096 ${name}`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
@@ -31,21 +34,24 @@ module.exports = class Names {
     })
   }
 
-  async idempotentCreateKey(name) {
+  async idempotentCreateKey (name) {
     try {
       await this.createKey(name)
     } catch (err) {
-      if (err === 'Error: key by that name already exists, refusing to overwrite') return
-      else throw err
+      if (err === 'Error: key by that name already exists, refusing to overwrite') {
+        // do nothing
+      } else {
+        throw err
+      }
     }
   }
 
-  getTarget(name) {
+  getTarget (name) {
     return new Promise((resolve, reject) => {
       exec(`ipfs key list -l`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
         const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${name}`))
-        if (!match) return reject('not found')
+        if (!match) return reject(new Error('not found'))
         exec(`ipfs name resolve ${match[1]}`, (err, stdout, stderr) => {
           if (err) return reject(stderr)
           const ipfs = stdout.substr(6, stdout.length - 7)
@@ -55,7 +61,7 @@ module.exports = class Names {
     })
   }
 
-  async publishHash(name, hash) {
+  async publishHash (name, hash) {
     await this.idempotentCreateKey(name)
     return new Promise((resolve, reject) => {
       exec(`ipfs name publish --resolve=false --key ${name} ${hash}`, (err, stdout, stderr) => {
@@ -64,7 +70,7 @@ module.exports = class Names {
         }
         const match = stdout.match(new RegExp('to ([a-zA-Z0-9]+):'))
         if (!match) {
-          return reject('No result found:' + stdout)
+          return reject(new Error('No result found:' + stdout))
         }
         return resolve(match[1])
       })

@@ -2,8 +2,8 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const ipfsDownload = require('./ipfs-upload')
-const ipfsName = require('./ipfs-name')
-const ipfsData = require('./ipfs-data')
+const IpfsName = require('./ipfs-name')
+const IpfsData = require('./ipfs-data')
 
 const app = express()
 
@@ -19,11 +19,11 @@ app.post('/api/ipfs', (req, res) => {
   ipfsDownload(req, res)
 })
 
-const names = new ipfsName()
+const names = new IpfsName()
 app.post('/api/name/:name/:content', names.publish)
 app.get('/api/name/:name', names.resolve)
 
-const data = new ipfsData()
+const data = new IpfsData()
 app.get('/api/data/:name', data.resolve)
 
 app.listen(process.env.PORT || 3000, () => {
