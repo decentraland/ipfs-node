@@ -8,4 +8,3 @@ This is a node.js express app that uses the go-ipfs client (the js-ipfs client [
 docker build . -t upload:latest
 docker run -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 upload:latest
 ```
-
