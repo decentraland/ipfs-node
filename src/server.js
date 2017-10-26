@@ -23,6 +23,11 @@ const names = new IpfsName()
 app.post('/api/name/:name/:content', names.publish)
 app.get('/api/name/:name', names.resolve)
 
+if (process.env.NODE_ENV !== 'production') {
+  // Serve this request for local development...
+  app.get('/name/:name', names.resolve)
+}
+
 const data = new IpfsData()
 app.get('/api/data/:name', data.resolve)
 
