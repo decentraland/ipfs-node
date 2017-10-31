@@ -11,9 +11,9 @@ RUN ipfs init
 RUN ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
 WORKDIR /uploader
-COPY . .
-
+COPY package.json .
 RUN npm install
+COPY . .
 
 EXPOSE 3000
 EXPOSE 4001
