@@ -26,6 +26,7 @@ app.get('/api/name/:name', names.resolve)
 if (process.env.NODE_ENV !== 'production') {
   // Serve this request for local development...
   app.get('/name/:name', names.resolve)
+  app.post('/ipfs', (req, res) => ipfsDownload(req, res))
 }
 
 const data = new IpfsData()

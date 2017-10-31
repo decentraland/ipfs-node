@@ -10,6 +10,10 @@ class Bundle {
     this.directory = tempy.directory()
   }
 
+  toString () {
+    return ' * ' + this.files.map((f) => f.path).join('\n * ')
+  }
+
   addFile (file) {
     this.files.push(file)
 
@@ -67,6 +71,11 @@ function handler (req, res) {
     })
     .then((url) => {
       console.log('Uploading complete...')
+      console.log(`Time: ${new Date().toString()}`)
+      console.log(`IP Address: ${req.connection && req.connection.remoteAddress}`)
+      console.dir(req.headers)
+      console.log(bundle.toString())
+      console.log(` * Uploaded as hash ${url}\n\n`)
 
       res.json({
         success: true,
