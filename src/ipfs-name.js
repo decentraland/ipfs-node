@@ -11,7 +11,8 @@ module.exports = class Names {
         const url = await this.getTarget(name)
         return res.json({ ok: true, url })
       } catch (error) {
-        return res.json({ ok: false, error })
+        console.log(error.stack)
+        return res.json({ ok: false, error: error.message })
       }
     }
     this.publish = async (req, res) => {
@@ -21,14 +22,17 @@ module.exports = class Names {
         const published = await this.publishHash(name, content)
         return res.json({ ok: true, address: published })
       } catch (error) {
-        return res.json({ ok: false, error })
+        console.log(error.stack)
+        return res.json({ ok: false, error: error.message })
       }
     }
   }
 
   createKey (name) {
     return new Promise((resolve, reject) => {
-      exec(`ipfs key gen --type rsa --size 4096 ${escapeShellArg(name)}`, (err, stdout, stderr) => {
+      const command = `ipfs key gen --type rsa --size 4096 ${escapeShellArg(name)}`
+      console.log('Execute', command)
+      exec(command, (err, stdout, stderr) => {
         if (err && !err.message.includes('key by that name already exists')) return reject(stderr)
         return resolve(stdout)
       })
@@ -53,7 +57,9 @@ module.exports = class Names {
         if (err) return reject(stderr)
         const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${escapeShellArg(name)}`))
         if (!match) return reject(new Error('not found'))
-        exec(`ipfs name resolve ${escapeShellArg(match[1])}`, (err, stdout, stderr) => {
+        const command = `ipfs name resolve ${escapeShellArg(match[1])}`
+        console.log('Execute', command)
+        exec(command, (err, stdout, stderr) => {
           if (err) return reject(stderr)
           const ipfs = stdout.substr(6, stdout.length - 7)
           return resolve({ ipns: match[1], ipfs })
