@@ -55,7 +55,7 @@ module.exports = class Names {
     return new Promise((resolve, reject) => {
       exec(`ipfs key list -l`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
-        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${escapeShellArg(name)}`))
+        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${name}`))
         if (!match) return reject(new Error('not found'))
         const command = `ipfs name resolve ${escapeShellArg(match[1])}`
         console.log('Execute', command)
