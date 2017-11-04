@@ -5,10 +5,8 @@ const escapeShellArg = require('./escape-shell-arg')
 module.exports = class Data {
   constructor () {
     this.resolve = async (req, res) => {
-      const name = sanitize(req.params.name)
-
       try {
-        const data = await this.getTarget(name)
+        const data = await this.getTarget(req.params.name)
         return res.json({ ok: true, data })
       } catch (error) {
         return res.json({ ok: false, error })
@@ -17,7 +15,10 @@ module.exports = class Data {
   }
   getTarget (name) {
     return new Promise((resolve, reject) => {
-      exec(`ipfs cat ${escapeShellArg(`/ipfs/${name}/parcel.aframe`)}`, (err, stdout, stderr) => {
+      if (!name.match(/[a-z0-9]+/gi)) {
+        return reject('invalid argument')
+      }
+      exec(`ipfs cat /ipfs/${name}/parcel.aframe`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
         return resolve(stdout)
       })
