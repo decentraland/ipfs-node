@@ -29,7 +29,7 @@ module.exports = class Names {
   createKey (name) {
     return new Promise((resolve, reject) => {
       exec(`ipfs key gen --type rsa --size 4096 ${escapeShellArg(name)}`, (err, stdout, stderr) => {
-        if (err) return reject(stderr)
+        if (err && !err.includes('key by that name already exists')) return reject(stderr)
         return resolve(stdout)
       })
     })
