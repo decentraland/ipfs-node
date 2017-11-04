@@ -1,6 +1,6 @@
 {
   "name": "uploader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This is a node.js express app that uses the go-ipfs client (the js-ipfs client [doesn't support](https://github.com/ipfs/js-ipfs/pull/856) the DHT yet) to upload scenes to our IPFS node.",
   "main": "src/server.js",
   "scripts": {
