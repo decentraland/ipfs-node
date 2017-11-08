@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const ipfsDownload = require('./ipfs-upload')
+const reupload = require('./ipfs-reupload')
 const IpfsName = require('./ipfs-name')
 const IpfsData = require('./ipfs-data')
 
@@ -19,15 +20,14 @@ app.post('/api/ipfs', (req, res) => {
   ipfsDownload(req, res)
 })
 
+// Download zip, uncompress and reupload to IPFS
+app.post('/api/reupload', (req, res) => {
+  reupload(req, res)
+})
+
 const names = new IpfsName()
 app.post('/api/name/:name/:content', names.publish)
 app.get('/api/name/:name', names.resolve)
-
-if (process.env.NODE_ENV !== 'production') {
-  // Serve this request for local development...
-  app.get('/name/:name', names.resolve)
-  app.post('/ipfs', (req, res) => ipfsDownload(req, res))
-}
 
 const data = new IpfsData()
 app.get('/api/data/:name', data.resolve)
