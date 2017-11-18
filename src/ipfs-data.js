@@ -6,19 +6,31 @@ module.exports = class Data {
   constructor () {
     this.resolve = async (req, res) => {
       try {
-        const data = await this.getTarget(req.params.name)
-        return res.json({ ok: true, data })
+        const data = await this.getScene(req.params.name)
+        const metadata = await this.getMetadata(req.params.name)
+        return res.json({ ok: true, data, metadata })
       } catch (error) {
         return res.json({ ok: false, error })
       }
     }
   }
-  getTarget (name) {
+  getScene (name) {
     return new Promise((resolve, reject) => {
       if (!name.match(/[a-z0-9]+/gi)) {
         return reject('invalid argument')
       }
       exec(`ipfs cat /ipfs/${name}/parcel.aframe`, (err, stdout, stderr) => {
+        if (err) return reject(stderr)
+        return resolve(stdout)
+      })
+    })
+  }
+  getMetadata (name) {
+    return new Promise((resolve, reject) => {
+      if (!name.match(/[a-z0-9]+/gi)) {
+        return reject('invalid argument')
+      }
+      exec(`ipfs cat /ipfs/${name}/scene.json`, (err, stdout, stderr) => {
         if (err) return reject(stderr)
         return resolve(stdout)
       })
