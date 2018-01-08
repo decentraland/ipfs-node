@@ -1,4 +1,4 @@
-const exec = require('child_process').exec
+const execFile = require('child_process').execFile
 const sanitize = require('./sanitize-name')
 const escapeShellArg = require('./escape-shell-arg')
 
@@ -19,7 +19,7 @@ module.exports = class Data {
       if (!name.match(/[a-z0-9]+/gi)) {
         return reject('invalid argument')
       }
-      exec(`ipfs cat /ipfs/${name}/parcel.aframe`, (err, stdout, stderr) => {
+      execFile('ipfs', ['cat', `/ipfs/${name}/parcel.aframe`], (err, stdout, stderr) => {
         if (err) return reject(stderr)
         return resolve(stdout)
       })
@@ -30,7 +30,7 @@ module.exports = class Data {
       if (!name.match(/[a-z0-9]+/gi)) {
         return reject('invalid argument')
       }
-      exec(`ipfs cat /ipfs/${name}/scene.json`, (err, stdout, stderr) => {
+      execFile('ipfs', ['cat', `/ipfs/${name}/scene.json`], (err, stdout, stderr) => {
         if (err) return reject(stderr)
         return resolve(stdout)
       })
