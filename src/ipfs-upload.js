@@ -1,7 +1,7 @@
 const tempy = require('tempy')
 const fs = require('fs')
 const path = require('path')
-const exec = require('child_process').exec
+const execFile = require('child_process').execFile
 const mkdirp = require('mkdirp')
 
 class Bundle {
@@ -42,7 +42,7 @@ class Bundle {
       (resolve, reject) => {
         console.log(`ipfs add -r ${path.join(this.directory, './*')}`)
 
-        exec(`ipfs add -w -r ${path.join(this.directory, './*')}`, (err, stdout, stderr) => {
+        execFile('ipfs', ['add', '-w', '-r', path.join(this.directory, './*')], (err, stdout, stderr) => {
           if (err) {
             reject(err)
             return

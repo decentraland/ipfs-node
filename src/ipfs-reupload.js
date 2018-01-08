@@ -1,7 +1,7 @@
 const tempy = require('tempy')
 const fs = require('fs')
 const path = require('path')
-const exec = require('child_process').exec
+const execFile = require('child_process').execFile
 const escapeShellArg = require('./escape-shell-arg')
 const glob = require('glob')
 const zipName = 'model.zip'
@@ -22,7 +22,7 @@ class Bundle {
 
     return new Promise(
       (resolve, reject) => {
-        exec(`curl ${escapeShellArg(url)} -o ${this.zipfile}`, (err, stdout, stderr) => {
+        execFile('curl', [url, '-o', this.zipfile], (err, stdout, stderr) => {
           if (err) {
             reject(err)
             return
@@ -55,8 +55,7 @@ class Bundle {
             resolve(this)
           })
         }
-
-        exec(`unzip ${zipName}`, { cwd: this.directory }, (err, stdout, stderr) => {
+        execFile('unzip', [zipName], { cwd: this.directory }, (err, stdout, stderr) => {
           if (err) {
             reject(err)
             return
@@ -74,7 +73,7 @@ class Bundle {
       (resolve, reject) => {
         console.log(`ipfs add -r ${path.join(this.directory, './*')}`)
 
-        exec(`ipfs add -w -r ${path.join(this.directory, './*')}`, (err, stdout, stderr) => {
+        execFile('ipfs',['add', '-w', '-r', path.join(this.directory, './*')], (err, stdout, stderr) => {
           if (err) {
             reject(err)
             return
