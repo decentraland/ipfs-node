@@ -27,7 +27,8 @@ app.post('/api/reupload', (req, res) => {
 
 const names = new IpfsName()
 app.post('/api/name/:name/:content', names.publish)
-app.get('/api/name/:name', names.resolve)
+app.get('/api/name/key/:key', names.resolve)
+app.get('/api/name/:ipns', names.resolve)
 
 const data = new IpfsData()
 app.get('/api/data/:name', data.resolve)

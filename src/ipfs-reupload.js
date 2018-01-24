@@ -2,7 +2,6 @@ const tempy = require('tempy')
 const fs = require('fs')
 const path = require('path')
 const execFile = require('child_process').execFile
-const escapeShellArg = require('./escape-shell-arg')
 const glob = require('glob')
 const zipName = 'model.zip'
 

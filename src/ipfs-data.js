@@ -1,6 +1,5 @@
 const execFile = require('child_process').execFile
 const sanitize = require('./sanitize-name')
-const escapeShellArg = require('./escape-shell-arg')
 
 module.exports = class Data {
   constructor () {

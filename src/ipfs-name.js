@@ -1,15 +1,18 @@
 const execFile = require('child_process').execFile
 const sanitize = require('./sanitize-name')
-const escapeShellArg = require('./escape-shell-arg')
 
 module.exports = class Names {
   constructor () {
     this.resolve = async (req, res) => {
-      const name = sanitize(req.params.name)
-
+      const shouldGetDependencies = req.query.dependencies === 'true'
       try {
-        const url = await this.getTarget(name)
-        return res.json({ ok: true, url })
+        let ipns = req.params.ipns
+        if (req.params.key) {
+          const key = sanitize(req.params.key)
+          ipns = await this.getIPNSByKey(key)
+        }
+        const url = await this.getTarget(ipns, shouldGetDependencies)
+        return res.json({ ok: true, ipns, ...url })
       } catch (error) {
         console.log(error.stack)
         return res.json({ ok: false, error: error.message })
@@ -30,7 +33,6 @@ module.exports = class Names {
 
   createKey (name) {
     return new Promise((resolve, reject) => {
-      console.log('Execute', `ipfs key gen --type rsa --size 4096 ${escapeShellArg(name)}`)
       execFile('ipfs', ['key', 'gen', '--type', 'rsa', '--size', '4096', name], (err, stdout, stderr) => {
         if (err && !err.message.includes('key by that name already exists')) return reject(stderr)
         return resolve(stdout)
@@ -50,20 +52,45 @@ module.exports = class Names {
     }
   }
 
-  getTarget (name) {
+  async resolveIPNS (input) {
+    return new Promise((resolve, reject) => {
+      execFile('ipfs', ['name', 'resolve', input], (err, stdout, stderr) => {
+        if (err) return reject(stderr)
+        const ipfs = stdout.substr(6, stdout.length - 7)
+        return resolve(ipfs)
+      })
+    })
+  }
+
+  async resolveDependencies (ipfs) {
+    return new Promise((resolve, reject) => {
+      execFile('ipfs', ['refs', '-u=true', '-r', ipfs], {maxBuffer: 1024 * 500}, (err, stdout, stderr) => {
+        if (err) return reject(stderr)
+        const dependencies = stdout.split(/\r?\n/).filter(ipfs => ipfs)
+        return resolve(dependencies)
+      })
+    })
+  }
+
+  async getIPNSByKey (key) {
     return new Promise((resolve, reject) => {
       execFile('ipfs', ['key', 'list', '-l'], (err, stdout, stderr) => {
         if (err) return reject(stderr)
-        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${name}`))
+        const match = stdout.match(new RegExp(`([a-zA-Z0-9]+) ${key}`))
         if (!match) return reject(new Error('not found'))
-        console.log('Execute', `ipfs name resolve ${escapeShellArg(match[1])}`)
-        execFile('ipfs', ['name', 'resolve', match[1]], (err, stdout, stderr) => {
-          if (err) return reject(stderr)
-          const ipfs = stdout.substr(6, stdout.length - 7)
-          return resolve({ ipns: match[1], ipfs })
-        })
+        const ipns = match[1]
+        return resolve(ipns)
       })
     })
+  }
+
+  async getTarget (ipns, shouldGetDependencies) {
+    const ipfs = await this.resolveIPNS(ipns)
+    let dependencies = []
+    if (shouldGetDependencies) {
+      dependencies = await this.resolveDependencies(ipfs)
+    }
+    return { ipfs, dependencies }
   }
 
   async publishHash (name, hash) {
