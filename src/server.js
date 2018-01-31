@@ -1,10 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const ipfsDownload = require('./ipfs-upload')
-const reupload = require('./ipfs-reupload')
-const IpfsName = require('./ipfs-name')
-const IpfsData = require('./ipfs-data')
+const IPFS = require('./ipfs')
 
 const app = express()
 
@@ -13,24 +10,15 @@ app.use(cors())
 
 // Parse the huge uploads we may get, still 100mb limit
 // though since the VM may run out of memory
-app.use(bodyParser.json({ limit: '100mb' }))
+app.use(bodyParser.json({ limit: '10kb' }))
 
 // IPFS Handler
-app.post('/api/ipfs', (req, res) => {
-  ipfsDownload(req, res)
-})
+const ipfs = new IPFS()
+app.post('/api/pin/:name', ipfs.pin)
 
-// Download zip, uncompress and reupload to IPFS
-app.post('/api/reupload', (req, res) => {
-  reupload(req, res)
-})
+app.get('/api/get/:name', ipfs.download)
 
-const names = new IpfsName()
-app.post('/api/name/:name/:content', names.publish)
-app.get('/api/name/:name', names.resolve)
-
-const data = new IpfsData()
-app.get('/api/data/:name', data.resolve)
+app.get('/api/resolve/:name', ipfs.resolve)
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('Listening on port 3000...')
