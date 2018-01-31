@@ -2,7 +2,6 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const ipfsDownload = require('./ipfs-upload')
-const reupload = require('./ipfs-reupload')
 const IpfsName = require('./ipfs-name')
 const IpfsData = require('./ipfs-data')
 
@@ -18,11 +17,6 @@ app.use(bodyParser.json({ limit: '100mb' }))
 // IPFS Handler
 app.post('/api/ipfs', (req, res) => {
   ipfsDownload(req, res)
-})
-
-// Download zip, uncompress and reupload to IPFS
-app.post('/api/reupload', (req, res) => {
-  reupload(req, res)
 })
 
 const names = new IpfsName()
