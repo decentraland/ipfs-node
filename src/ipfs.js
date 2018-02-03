@@ -21,7 +21,8 @@ module.exports = class Download {
     }
     this.resolve = async (req, res) => {
       try {
-        const url = await this.getTarget(req.params.name)
+        const shouldGetDependencies = req.query.dependencies === 'true'
+        const url = await this.getTarget(req.params.name, shouldGetDependencies)
         return res.json({ ok: true, url })
       } catch (error) {
         console.log(error.stack)
@@ -52,12 +53,31 @@ module.exports = class Download {
     })
   }
 
-  getTarget (name) {
+  getTarget (name, shouldGetDependencies = false) {
+    const ipfs = await resolveDependencies(name)
+    let dependencies = []
+    if (shouldGetDependencies) {
+      dependencies = await this.resolveDependencies(ipfs)
+    }
+    return { ipfs, dependencies }
+  }
+
+  async resolveIPNS (input) {
     return new Promise((resolve, reject) => {
       execFile('ipfs', ['name', 'resolve', name], (err, stdout, stderr) => {
         if (err) return reject(stderr)
         const ipfs = stdout.substr(6, stdout.length - 7)
         return resolve(ipfs)
+      })
+    })
+  }
+
+  async resolveDependencies (ipfs) {
+    return new Promise((resolve, reject) => {
+      execFile('ipfs', ['refs', '-u=true', '-r', ipfs], {maxBuffer: 1024 * 500}, (err, stdout, stderr) => {
+        if (err) return reject(stderr)
+        const dependencies = stdout.split(/\r?\n/).filter(ipfs => ipfs)
+        return resolve(dependencies)
       })
     })
   }
