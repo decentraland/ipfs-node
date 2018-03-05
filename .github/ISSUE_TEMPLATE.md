@@ -1,7 +1,0 @@
-## Context
-
-## Objective
-
-## Features
-
-## Testing
