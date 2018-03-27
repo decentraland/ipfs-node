@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  redis:
+    image: redis:3.2-alpine
+    volumes:
+      - $PWD/redis_data:/data
+    ports:
+      - 6379:6379
+    networks:
+      - internal
+
+  ipfs:
+    container_name: ipfs-node
+    build:
+      context: .
+    depends_on:
+      - redis
+    environment:
+      - .env
+    ports:
+      - 3000:3000
+    volumes:
+      - $PWD:/uploader
+      - $PWD/tmp:/uploader/tmp
+      - $PWD/db:/uploader/db
+      - $PWD/data:/root/.ipfs
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa
+    networks:
+      - internal
+
+volumes:
+    redis_data:
+
+networks:
+  internal:
+    driver: bridge
+

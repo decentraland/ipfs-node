@@ -1,32 +1,35 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const ipfsDownload = require('./ipfs-upload')
-const IpfsName = require('./ipfs-name')
-const IpfsData = require('./ipfs-data')
+const IPFS = require('./ipfs')
+const { setLogger, errorHandler, notFound } = require('./utils')
+const { connectBlockchain } = require('./ethereum')
 
 const app = express()
 
-// Allow other domains to connect, todo, limit to DCL domains
 app.use(cors())
 
 // Parse the huge uploads we may get, still 100mb limit
 // though since the VM may run out of memory
-app.use(bodyParser.json({ limit: '100mb' }))
+app.use(bodyParser.json({ limit: '10kb' }))
+
+setLogger(app)
 
 // IPFS Handler
-app.post('/api/ipfs', (req, res) => {
-  ipfsDownload(req, res)
-})
+const ipfs = new IPFS()
 
-const names = new IpfsName()
-app.post('/api/name/:name/:content', names.publish)
-app.get('/api/name/key/:key', names.resolve)
-app.get('/api/name/:ipns', names.resolve)
+app.post('/api/pin/:peerId/:x/:y', ipfs.pin)
 
-const data = new IpfsData()
-app.get('/api/data/:name', data.resolve)
+app.get('/api/get/:ipfs*?', ipfs.download)
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('Listening on port 3000...')
+app.get('/api/resolve/:x/:y', ipfs.resolve)
+
+app.use(notFound)
+
+app.use(errorHandler)
+
+const port = process.env.PORT || 3000
+app.listen(port, () => {
+  connectBlockchain()
+  console.log(`Listening on port ${port}...`)
 })

@@ -2,6 +2,11 @@ FROM node:latest
 
 RUN apt-get update
 RUN apt-get upgrade -y
+RUN apt-get -y install \
+    libusb-dev \
+    libusb-1.0.0-dev \
+    libudev-dev
+RUN npm install node-hid
 
 WORKDIR /opt/ipfs
 RUN wget https://dist.ipfs.io/go-ipfs/v0.4.11/go-ipfs_v0.4.11_linux-amd64.tar.gz

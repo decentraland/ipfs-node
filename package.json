@@ -6,18 +6,31 @@
   "scripts": {
     "test": "tape test/*.js && standard",
     "docker:build": "docker build . -t uploader:latest",
-    "docker:run": "docker run -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
-    "start": "node src/server.js"
+    "docker:run": "docker run --name=ipfs-node -v $PWD/db:/root/app/ipfs-node/db  -v $PWD/data:/root/.ipfs  -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
+    "docker:vbox:run": "docker run --name=ipfs-node -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
+    "docker:aws:run": "docker run --name=ipfs-node -v $PWD/db:/uploader/db  -v $PWD/data:/root/.ipfs  -v ~/.ssh/id_ed25519:/root/.ssh/id_rsa --env-file .env -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
+    "start": "nodemon src/server.js"
   },
   "author": "The Decentraland Team",
   "license": "Apache-2.0",
   "dependencies": {
+    "axios": "^0.18.0",
+    "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
+    "decentraland-commons": "^3.2.0",
+    "dotenv": "^5.0.1",
     "express": "^4.16.2",
+    "http-errors": "^1.6.2",
     "mkdirp": "^0.5.1",
+    "morgan": "^1.9.0",
+    "redis": "^2.8.0",
     "standard": "^10.0.3",
     "tape": "^4.8.0",
     "tempy": "^0.2.1"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "nodemon": "^1.14.12"
   }
 }
