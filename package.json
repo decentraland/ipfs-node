@@ -18,19 +18,26 @@
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
-    "decentraland-commons": "^3.2.0",
+    "commander": "^2.15.1",
+    "decentraland-commons": "^3.6.0",
     "dotenv": "^5.0.1",
     "express": "^4.16.2",
     "http-errors": "^1.6.2",
     "mkdirp": "^0.5.1",
     "morgan": "^1.9.0",
+    "pg": "^7.4.1",
     "redis": "^2.8.0",
+    "rollbar": "^2.3.9",
     "standard": "^10.0.3",
     "tape": "^4.8.0",
     "tempy": "^0.2.1"
   },
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
-    "nodemon": "^1.14.12"
+    "mailchimp-api-v3": "^1.8.0",
+    "mongodb": "^3.0.5",
+    "nodemon": "^1.14.12",
+    "nodemailer": "^4.6.3",
+    "tunnel-ssh": "^4.1.4"
   }
 }
