@@ -1,0 +1,10 @@
+{
+  "apps" : [{
+    "name"        : "ipfs-gateway-prod",
+    "script"      : "./src/server.js",
+    "watch"       : false,
+    "exec_interpreter" : "babel-node",
+    "exec_mode"        : "fork",
+    "instances"  : 1
+  }]
+}

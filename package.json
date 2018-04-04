@@ -4,11 +4,9 @@
   "description": "This is a node.js express app that uses the go-ipfs client (the js-ipfs client [doesn't support](https://github.com/ipfs/js-ipfs/pull/856) the DHT yet) to upload scenes to our IPFS node.",
   "main": "src/server.js",
   "scripts": {
+    "start:prod": "pm2-docker start ./pm2_config.json",
     "test": "tape test/*.js && standard",
-    "docker:build": "docker build . -t uploader:latest",
     "docker:run": "docker run --name=ipfs-node -v $PWD/db:/root/app/ipfs-node/db  -v $PWD/data:/root/.ipfs  -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
-    "docker:vbox:run": "docker run --name=ipfs-node -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
-    "docker:aws:run": "docker run --name=ipfs-node -v $PWD/db:/uploader/db  -v $PWD/data:/root/.ipfs  -v ~/.ssh/id_ed25519:/root/.ssh/id_rsa --env-file .env -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
     "start": "nodemon src/server.js"
   },
   "author": "The Decentraland Team",
@@ -17,8 +15,8 @@
     "axios": "^0.18.0",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
-    "cors": "^2.8.4",
     "commander": "^2.15.1",
+    "cors": "^2.8.4",
     "decentraland-commons": "^3.6.0",
     "dotenv": "^5.0.1",
     "express": "^4.16.2",
@@ -26,6 +24,7 @@
     "mkdirp": "^0.5.1",
     "morgan": "^1.9.0",
     "pg": "^7.4.1",
+    "pm2": "^2.10.2",
     "redis": "^2.8.0",
     "rollbar": "^2.3.9",
     "standard": "^10.0.3",
@@ -33,11 +32,12 @@
     "tempy": "^0.2.1"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "babel-polyfill": "^6.26.0",
     "mailchimp-api-v3": "^1.8.0",
     "mongodb": "^3.0.5",
-    "nodemon": "^1.14.12",
     "nodemailer": "^4.6.3",
+    "nodemon": "^1.14.12",
     "tunnel-ssh": "^4.1.4"
   }
 }
