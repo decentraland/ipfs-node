@@ -15,6 +15,8 @@
     "axios": "^0.18.0",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
+    "babel-cli": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
     "commander": "^2.15.1",
     "cors": "^2.8.4",
     "decentraland-eth": "^1.1.2",
