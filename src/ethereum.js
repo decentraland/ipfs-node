@@ -1,6 +1,6 @@
 require('babel-polyfill')
 require('dotenv').config({path: './.env'})
-const { eth, contracts } = require('decentraland-commons')
+const { eth, contracts } = require('decentraland-eth')
 const createError = require('http-errors')
 const web3Eth = eth
 const { LANDRegistry } = contracts
@@ -8,8 +8,10 @@ const { LANDRegistry } = contracts
 async function connectBlockchain () {
   try {
     await web3Eth.disconnect() // clean if it is a retry
+    const land = new LANDRegistry(process.env.LAND_REGISTRY_CONTRACT_ADDRESS)
     let connected = await web3Eth.connect({
-      contracts: [LANDRegistry]
+      contracts: [land],
+      providerUrl: process.env.RCP_URL
     })
     if (!connected) {
       throw new Error('Could not connect to the blockchain')
