@@ -1,3 +1,4 @@
+require('babel-pollyfill') // needed for pm2 to work proper
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
@@ -23,6 +24,8 @@ app.post('/api/pin/:peerId/:x/:y', ipfs.pin)
 app.get('/api/get/:ipfs*?', ipfs.download)
 
 app.get('/api/resolve/:x/:y', ipfs.resolve)
+
+app.get('/ping', (req, res, next) => res.json({ message: 'pong' })) // Used for ELB to akc a healthy state
 
 app.use(notFound)
 

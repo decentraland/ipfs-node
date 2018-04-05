@@ -7,15 +7,22 @@ const { LANDRegistry } = contracts
 
 async function connectBlockchain () {
   try {
+    console.log('**************Cleaning prev connections to the blockchain***********')
     await web3Eth.disconnect() // clean if it is a retry
+    console.log('**************Attemp to connect to the blockchain!***********')
+    console.log(`connecting to ${process.env.RPC_URL}`)
+    console.log(`with Registry ${process.env.LAND_REGISTRY_CONTRACT_ADDRESS}`)
+    console.log('**************Attemp to connect to the blockchain!***********')
     const land = new LANDRegistry(process.env.LAND_REGISTRY_CONTRACT_ADDRESS)
     let connected = await web3Eth.connect({
       contracts: [land],
-      providerUrl: process.env.RCP_URL
+      providerUrl: process.env.RPC_URL
     })
+    console.log(`response: ${connected}`)
     if (!connected) {
       throw new Error('Could not connect to the blockchain')
     }
+    console.log('**************Connected!***********')
   } catch (e) {
     console.log(`${e.message}. Retry in 3s...`)
     setTimeout(connectBlockchain, 3000)
