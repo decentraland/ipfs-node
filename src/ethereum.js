@@ -11,7 +11,7 @@ async function connectBlockchain () {
     const land = new LANDRegistry(process.env.LAND_REGISTRY_CONTRACT_ADDRESS)
     let connected = await web3Eth.connect({
       contracts: [land],
-      providerUrl: process.env.RCP_URL
+      providerUrl: process.env.RPC_URL
     })
     if (!connected) {
       throw new Error('Could not connect to the blockchain')
