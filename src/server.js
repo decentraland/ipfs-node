@@ -1,4 +1,4 @@
-require('babel-pollyfill') // needed for pm2 to work proper
+// require('babel-pollyfill') // needed for pm2 to work proper
 require('newrelic')
 const express = require('express')
 const bodyParser = require('body-parser')
