@@ -2,8 +2,7 @@ const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const axios = require('axios')
 const { sandbox } = require('sinon')
-const createError = require('http-errors')
-const { checkIPFS, checkParcel } = require('../src/blacklist')
+const Blacklist = require('../src/blacklist')
 
 chai.use(chaiAsPromised)
 
@@ -14,36 +13,35 @@ const y = 1
 const expect = chai.expect
 let axiosGet
 
-beforeEach(() => {
-  process.env.BLACKLIST_URL = 'http://blacklist.com/api'
-  axiosGet = ctx.stub(axios, 'get').callsFake(
-    () =>
-      new Promise(resolve =>
-        resolve({
-          data: {
-            blacklisted: true
-          }
-        })
-      )
-  )
-})
-
-afterEach(() => {
-  // completely restore all fakes created through the sandbox
-  ctx.restore()
-})
-
 describe('Blacklist', () => {
+  beforeEach(() => {
+    process.env.BLACKLIST_URL = 'http://blacklist.com/api'
+    axiosGet = ctx.stub(axios, 'get').callsFake(
+      () =>
+        new Promise(resolve =>
+          resolve({
+            data: {
+              blacklisted: true
+            }
+          })
+        )
+    )
+  })
+
+  afterEach(() => {
+    // completely restore all fakes created through the sandbox
+    ctx.restore()
+  })
   describe('checkIPFS', () => {
     it('should fulfilled if env is not loaded', () => {
       process.env.BLACKLIST_URL = ''
-      expect(checkIPFS(ipfs), 'expect isBlacklisted to be false').be.fulfilled
+      expect(Blacklist.checkIPFS(ipfs), 'expect isBlacklisted to be false').be.fulfilled
       expect(axiosGet.called, 'expect axios.get have not been called').to.be.false
     })
 
     it('should throw 403 if ipfs is blacklisted', () => {
       expect(
-        checkIPFS(ipfs),
+        Blacklist.checkIPFS(ipfs),
         `expect IPFS ${ipfs} is blacklisted exception`
       ).be.rejectedWith(`IPFS ${ipfs} is blacklisted`)
       expect(axiosGet.called, 'expect axios.get have been called').to.be.true
@@ -60,7 +58,7 @@ describe('Blacklist', () => {
             })
           )
       )
-      expect(checkIPFS(ipfs), 'expect isBlacklisted to be false').be.fulfilled
+      expect(Blacklist.checkIPFS(ipfs), 'expect isBlacklisted to be false').be.fulfilled
       expect(axiosGet.called, 'expect axios.get have not been called').to.be.true
     })
   })
@@ -68,13 +66,13 @@ describe('Blacklist', () => {
   describe('checkParcel', () => {
     it('should fulfilled if env is not loaded', () => {
       process.env.BLACKLIST_URL = ''
-      expect(checkParcel(x, y), 'expect isBlacklisted to be false').be.fulfilled
+      expect(Blacklist.checkParcel(x, y), 'expect isBlacklisted to be false').be.fulfilled
       expect(axiosGet.called, 'expect axios.get have not been called').to.be.false
     })
 
     it('should throw 403 if parcel is blacklisted', () => {
       expect(
-        checkParcel(x, y),
+        Blacklist.checkParcel(x, y),
         `expect IPFS ${ipfs} is blacklisted exception`
       ).be.rejectedWith(`Parcel (${x},${y}) is blacklisted`)
       expect(axiosGet.called, 'expect axios.get have been called').to.be.true
@@ -91,7 +89,7 @@ describe('Blacklist', () => {
             })
           )
       )
-      expect(checkParcel(x, y), 'expect isBlacklisted to be false').be.fulfilled
+      expect(Blacklist.checkParcel(x, y), 'expect isBlacklisted to be false').be.fulfilled
       expect(axiosGet.called, 'expect axios.get have not been called').to.be.true
     })
   })

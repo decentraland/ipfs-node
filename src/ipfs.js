@@ -1,7 +1,7 @@
 const execFile = require('child_process').execFile
-const { getIPNS } = require('./ethereum')
-const { checkIPFS, checkParcel } = require('./blacklist')
-const { setParcel, getParcel, setIPFS, getIPFS } = require('./database')
+const Ethereum = require('./ethereum')
+const Blacklist = require('./blacklist')
+const DB = require('./database')
 const request = require('request')
 
 module.exports = class Download {
@@ -10,7 +10,7 @@ module.exports = class Download {
       try {
         const ipfs = req.params.ipfs
         const file = req.params[0] ? `${ipfs}/${req.params[0]}` : ipfs
-        await checkIPFS(ipfs)
+        await Blacklist.checkIPFS(ipfs)
         request.get(`http://localhost:8080/ipfs/${file}`).pipe(res)
       } catch (error) {
         next(error)
@@ -19,13 +19,13 @@ module.exports = class Download {
     this.pin = async (req, res, next) => {
       try {
         const [x, y] = [req.params.x, req.params.y]
-        const ipns = await getIPNS(x, y)
-        await Download.connectToPeer(req.params.peerId)
+        const ipns = await Ethereum.getIPNS(x, y)
+        await Download.connectPeer(req.params.peerId)
         const ipfs = await Download.resolveIPNS(ipns)
         await Download.publishHash(ipfs)
         const dependencies = await Download.resolveDependencies(ipfs)
-        await setIPFS(ipns, ipfs)
-        await setParcel({ x, y }, { ipns, ipfs, dependencies })
+        await DB.setIPFS(ipns, ipfs)
+        await DB.setParcel({ x, y }, { ipns, ipfs, dependencies })
         return res.json({ ok: true, message: 'Pinning Success' })
       } catch (error) {
         next(error)
@@ -35,17 +35,17 @@ module.exports = class Download {
       try {
         const [x, y] = [req.params.x, req.params.y]
         if (!req.query.force) { // No cache
-          await checkParcel(x, y)
-          const cachedResponse = await getParcel(x, y)
+          await Blacklist.checkParcel(x, y)
+          const cachedResponse = await DB.getParcel(x, y)
           if (cachedResponse) {
             return res.json({ok: true, url: cachedResponse})
           }
         }
-        const ipns = await getIPNS(x, y)
+        const ipns = await Ethereum.getIPNS(x, y)
         const ipfs = await Download.resolveIPNS(ipns)
         const dependencies = await Download.resolveDependencies(ipfs)
         const url = { ipns, ipfs, dependencies }
-        await setParcel({ x, y }, url)
+        await DB.setParcel({ x, y }, url)
         return res.json({ ok: true, url })
       } catch (error) {
         next(error)
@@ -74,7 +74,7 @@ module.exports = class Download {
         let ipfs
         if (err) {
           // Check it with our dht
-          ipfs = await getIPFS(ipns)
+          ipfs = await DB.getIPFS(ipns)
           if (!ipfs) {
             return reject(new Error(stderr))
           } else {
@@ -107,10 +107,10 @@ module.exports = class Download {
     })
   }
 
-  static connectToPeer (peerId) {
+  static connectPeer (peerId) {
     return new Promise((resolve, reject) => {
       execFile('ipfs', ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`], (err, stdout, stderr) => {
-        if (err) return reject(new Error('Can not connect to peer: ' + peerId))
+        if (err) return reject(new Error('Could not connect to peer: ' + peerId))
         return resolve()
       })
     })
