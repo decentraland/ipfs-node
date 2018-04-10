@@ -5,6 +5,7 @@ jobs:
       - image: circleci/node:latest
     environment:
       NODE_ENV: "test"
+      LAND_REGISTRY_CONTRACT_ADDRESS: "0x7a73483784ab79257bb11b96fd62a2c3ae4fb75b"
     steps:
       - checkout
       - run: sudo apt-get update && sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
@@ -12,7 +13,7 @@ jobs:
       - run: tar xvfz go-ipfs_v0.4.11_linux-amd64.tar.gz
       - run: sudo cp go-ipfs/ipfs /usr/local/bin
       - run: ipfs init
-      - run: ipfs daemon &
+      - run: ipfs daemon --offline > ipfs.log &
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
