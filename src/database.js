@@ -22,12 +22,10 @@ class Database {
   }
 
   static setIPFS(ipns, ipfs) {
-    console.log('aaaaa')
     return client.setAsync(ipns, ipfs)
   }
 
   static async getIPFS(ipns) {
-    console.log(ipns)
     const ipfs = await client.getAsync(ipns)
     return ipfs
   }

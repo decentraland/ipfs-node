@@ -32,7 +32,7 @@ class Ethereum {
       console.log('**************Connected!***********')
     } catch (e) {
       console.log(`${e.message}. Retry in 3s...`)
-      setTimeout(this.connectBlockchain, 3000)
+      setTimeout(Ethereum.connectBlockchain, 3000)
     }
   }
 

@@ -31,6 +31,28 @@ describe('Ethereum', () => {
     // completely restore all fakes created through the sandbox
     ctx.restore()
   })
+  describe('connectBlockchain', () => {
+    it('should connect', async () => {
+      process.env.RPC_URL = 'https://ropsten.infura.io/'
+      expect(Ethereum.connectBlockchain(), `expect connectBlockchain`).to.be.fulfilled
+    })
+
+    it('should retry to connect', async () => {
+      const web3Connect = ctx.stub(web3Eth, 'connect')
+      process.env.RPC_URL = ''
+      Ethereum.connectBlockchain()
+      process.env.RPC_URL = 'https://ropsten.infura.io/'
+      await new Promise(r =>
+        setTimeout(() => {
+          expect(
+           web3Connect.calledTwice,
+           `expect web3Eth.connect to be called twice`
+          ).be.true
+          r()
+        }, 4000)
+      )
+    })
+  })
   describe('getIPNS', () => {
     it('should return IPNS from parcel', async () => {
       const res = await Ethereum.getIPNS(x, y)

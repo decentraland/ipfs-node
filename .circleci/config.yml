@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  ipfs:
+    docker:
+      - image: circleci/node:latest
+    environment:
+      NODE_ENV: "test"
+    steps:
+      - checkout
+      - run:
+        name: install-libusb
+        command: sudo apt-get update && sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
+      - run: sudo npm install node-hid
+      - run: cd /opt/ipfs
+      - run: wget https://dist.ipfs.io/go-ipfs/v0.4.11/go-ipfs_v0.4.11_linux-amd64.tar.gz
+      - run: tar xvfz go-ipfs_v0.4.11_linux-amd64.tar.gz
+      - run: cp go-ipfs/ipfs /usr/local/bin
+      - run: ipfs init
+      - run: ipfs deaemon
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          - v1-dependencies-
+      - run: npm i --force
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+      - run: npm run test:ci
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - ipfs
