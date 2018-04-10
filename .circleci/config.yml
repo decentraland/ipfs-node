@@ -22,7 +22,7 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-      - run: ipfs daemon & npm run test
+      - run: ipfs daemon --offline & npm run test
 
 workflows:
   version: 2
