@@ -28,3 +28,5 @@ class Blacklist {
 }
 
 module.exports = Blacklist
+
+
