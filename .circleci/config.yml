@@ -13,7 +13,6 @@ jobs:
       - run: tar xvfz go-ipfs_v0.4.11_linux-amd64.tar.gz
       - run: sudo cp go-ipfs/ipfs /usr/local/bin
       - run: ipfs init
-      - run: ipfs daemon --offline > ipfs.log &
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
@@ -23,7 +22,7 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-      - run: ipfs daemon && npm run test
+      - run: ipfs daemon & npm run test
 
 workflows:
   version: 2
