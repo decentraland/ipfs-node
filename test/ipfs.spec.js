@@ -30,13 +30,16 @@ let getParcel
 let setParcel
 
 const addFile = () => {
-  // fs.mkdirSync('test/tmp')
   fs.writeFileSync('test/test.txt', 'I am using for testing!')
   return new Promise((resolve, reject) => {
-    execFile('ipfs', ['add', '-r', `${process.cwd()}/test/test.txt`], (err, stdout, stderr) => {
-      if (err) return reject(new Error(`Can not add the file: ${stderr}`))
-      return resolve(stdout.split(' ')[1])
-    })
+    execFile(
+      'ipfs',
+      ['add', '-r', `${process.cwd()}/test/test.txt`],
+      (err, stdout, stderr) => {
+        if (err) return reject(new Error(`Can not add the file: ${stderr}`))
+        return resolve(stdout.split(' ')[1])
+      }
+    )
   })
 }
 
@@ -62,8 +65,7 @@ const removeFile = () => {
 describe('IPFS', () => {
   beforeEach(async () => {
     ipfs = await addFile()
-    ipns = 'QmUZ7t5hVXMdt2yWAPkDVBuSPuGc8uNNzSzNWDoZ1i5eLy'
-    // ipns = await publishFile()
+    ipns = await publishFile()
     url = {
       ipns,
       ipfs,
@@ -96,7 +98,10 @@ describe('IPFS', () => {
   })
   describe('Pin', () => {
     it('should pin files', async () => {
-      const resExpected = JSON.stringify({ ok: true, message: 'Pinning Success' })
+      const resExpected = JSON.stringify({
+        ok: true,
+        message: 'Pinning Success'
+      })
       const res = await chai.request(server).post(`/api/pin/peerId/${x}/${y}`)
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(
@@ -107,9 +112,14 @@ describe('IPFS', () => {
 
     it('should not pin files because peer is down', async () => {
       connectPeer.restore()
-      const resExpected = JSON.stringify({ error: 'Could not connect to peer: peerId' })
+      const resExpected = JSON.stringify({
+        error: 'Could not connect to peer: peerId'
+      })
       const res = await chai.request(server).post(`/api/pin/peerId/${x}/${y}`)
-      expect(res.status, 'Expect status 500: could not connect to peer').to.be.equal(500)
+      expect(
+        res.status,
+        'Expect status 500: could not connect to peer'
+      ).to.be.equal(500)
       expect(
         JSON.stringify(res.body),
         'Expect body to be could not resolve name'
@@ -118,9 +128,14 @@ describe('IPFS', () => {
 
     it('should not pin files because IPNS does not exist', async () => {
       getIPNS.callsFake(() => null)
-      const resExpected = JSON.stringify({ error: 'Error: Could not resolve name.\n' })
+      const resExpected = JSON.stringify({
+        error: 'Error: Could not resolve name.\n'
+      })
       const res = await chai.request(server).post(`/api/pin/peerId/${x}/${y}`)
-      expect(res.status, 'Expect status 500: could not resolve name').to.be.equal(500)
+      expect(
+        res.status,
+        'Expect status 500: could not resolve name'
+      ).to.be.equal(500)
       expect(
         JSON.stringify(res.body),
         'Expect body to be could not resolve name'
@@ -139,13 +154,13 @@ describe('IPFS', () => {
     })
   })
 
-   describe('Resolve', () => {
+  describe('Resolve', () => {
     it('should resolve without cache', async () => {
       const resExpected = JSON.stringify({ ok: true, url })
       const res = await chai.request(server).get(`/api/resolve/${x}/${y}`)
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(getParcel.called, 'Expect getParcel to be called').to.be.true
-      expect(setParcel.called,  'Expect setParcel to be called').to.be.true
+      expect(setParcel.called, 'Expect setParcel to be called').to.be.true
       expect(
         JSON.stringify(res.body),
         'Expect body to have the ipfs data'
@@ -158,7 +173,7 @@ describe('IPFS', () => {
       const res = await chai.request(server).get(`/api/resolve/${x}/${y}`)
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(getParcel.called, 'Expect getParcel to be called').to.be.true
-      expect(setParcel.called,  'Expect setParcel not to be called').to.be.false
+      expect(setParcel.called, 'Expect setParcel not to be called').to.be.false
       expect(
         JSON.stringify(res.body),
         'Expect body to have the ipfs data'
@@ -168,7 +183,9 @@ describe('IPFS', () => {
     it('should resolve without cache when is forced', async () => {
       getParcel.callsFake(() => url)
       const resExpected = JSON.stringify({ ok: true, url })
-      const res = await chai.request(server).get(`/api/resolve/${x}/${y}?force=true`)
+      const res = await chai
+        .request(server)
+        .get(`/api/resolve/${x}/${y}?force=true`)
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(getParcel.called, 'Expect getParcel not to be called').to.be.false
       expect(setParcel.called, 'Expect setParcel to be called').to.be.true
@@ -182,9 +199,15 @@ describe('IPFS', () => {
       checkParcel.restore()
       getParcel.callsFake(() => url)
       const resExpected = JSON.stringify({ ok: true, url })
-      const res = await chai.request(server).get(`/api/resolve/${x}/${y}?force=true`)
-      expect(res.status, 'Expect status 200: unless parcel is blacklisted').to.be.equal(200)
-      expect(checkParcel.called, 'Expect checkParcel not to be called').to.be.false
+      const res = await chai
+        .request(server)
+        .get(`/api/resolve/${x}/${y}?force=true`)
+      expect(
+        res.status,
+        'Expect status 200: unless parcel is blacklisted'
+      ).to.be.equal(200)
+      expect(checkParcel.called, 'Expect checkParcel not to be called').to.be
+        .false
       expect(
         JSON.stringify(res.body),
         `Expect body to have the ipfs data`
@@ -193,9 +216,14 @@ describe('IPFS', () => {
 
     it('should not resolve because IPNS is blacklisted', async () => {
       checkParcel.restore()
-      const resExpected = JSON.stringify({ error: `Parcel (${x},${y}) is blacklisted` })
+      const resExpected = JSON.stringify({
+        error: `Parcel (${x},${y}) is blacklisted`
+      })
       const res = await chai.request(server).get(`/api/resolve/${x}/${y}`)
-      expect(res.status, 'Expect status 403: parcel is blacklisted').to.be.equal(403)
+      expect(
+        res.status,
+        'Expect status 403: parcel is blacklisted'
+      ).to.be.equal(403)
       expect(
         JSON.stringify(res.body),
         `Expect body to be Parcel (${x},${y}) is blacklisted`
@@ -212,7 +240,7 @@ describe('IPFS', () => {
         'Expect body to be IPNS not found'
       ).to.be.equal(resExpected)
     })
-   })
+  })
 
   describe('Download', () => {
     it('should download', async () => {
@@ -227,9 +255,13 @@ describe('IPFS', () => {
 
     it('should not download because hash is blacklisted', async () => {
       checkIPFS.restore()
-      const resExpected = JSON.stringify({ error: `IPFS ${ipfs} is blacklisted` })
+      const resExpected = JSON.stringify({
+        error: `IPFS ${ipfs} is blacklisted`
+      })
       const res = await chai.request(server).get(`/api/get/${ipfs}`)
-      expect(res.status, 'Expect status 403: IPFS is blacklisted').to.be.equal(403)
+      expect(res.status, 'Expect status 403: IPFS is blacklisted').to.be.equal(
+        403
+      )
       expect(
         JSON.stringify(res.body),
         `Expect body to be IPFS ${ipfs} is blacklisted`

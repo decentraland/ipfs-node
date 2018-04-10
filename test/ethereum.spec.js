@@ -22,7 +22,9 @@ describe('Ethereum', () => {
     getContracts = ctx.stub(web3Eth, 'getContract').callsFake(() => ({
       landData: () => 'metadata'
     }))
-    decodeLandData = ctx.stub(LANDRegistry, 'decodeLandData').callsFake(() => ({ ipns: `ipns:${ipns}` }))
+    decodeLandData = ctx
+      .stub(LANDRegistry, 'decodeLandData')
+      .callsFake(() => ({ ipns: `ipns:${ipns}` }))
   })
 
   afterEach(() => {

@@ -5,7 +5,7 @@ const DB = require('./database')
 const request = require('request')
 
 module.exports = class Download {
-  constructor () {
+  constructor() {
     this.download = async (req, res, next) => {
       try {
         const ipfs = req.params.ipfs
@@ -34,11 +34,12 @@ module.exports = class Download {
     this.resolve = async (req, res, next) => {
       try {
         const [x, y] = [req.params.x, req.params.y]
-        if (!req.query.force) { // No cache
+        if (!req.query.force) {
+          // No cache
           await Blacklist.checkParcel(x, y)
           const cachedResponse = await DB.getParcel(x, y)
           if (cachedResponse) {
-            return res.json({ok: true, url: cachedResponse})
+            return res.json({ ok: true, url: cachedResponse })
           }
         }
         const ipns = await Ethereum.getIPNS(x, y)
@@ -53,13 +54,15 @@ module.exports = class Download {
     }
   }
 
-  static publishHash (ipfs) {
+  static publishHash(ipfs) {
     return new Promise((resolve, reject) => {
       execFile('ipfs', ['pin', 'add', ipfs], (err, stdout, stderr) => {
         if (err) {
           return reject(stderr)
         }
-        const match = stdout.match(new RegExp('pinned ([a-zA-Z0-9]+) recursively'))
+        const match = stdout.match(
+          new RegExp('pinned ([a-zA-Z0-9]+) recursively')
+        )
         if (!match) {
           reject(new Error('Can not pin: ' + ipfs))
         }
@@ -68,51 +71,68 @@ module.exports = class Download {
     })
   }
 
-  static resolveIPNS (ipns) {
+  static resolveIPNS(ipns) {
     return new Promise((resolve, reject) => {
-      execFile('ipfs', ['name', 'resolve', '--nocache', ipns], async (err, stdout, stderr) => {
-        let ipfs
-        if (err) {
-          // Check it with our dht
-          ipfs = await DB.getIPFS(ipns)
-          if (!ipfs) {
-            return reject(new Error(stderr))
-          } else {
-            return resolve(ipfs)
+      execFile(
+        'ipfs',
+        ['name', 'resolve', '--nocache', ipns],
+        async (err, stdout, stderr) => {
+          let ipfs
+          if (err) {
+            // Check it with our dht
+            ipfs = await DB.getIPFS(ipns)
+            if (!ipfs) {
+              return reject(new Error(stderr))
+            } else {
+              return resolve(ipfs)
+            }
           }
+          ipfs = stdout.substr(6, stdout.length - 7)
+          return resolve(ipfs)
         }
-        ipfs = stdout.substr(6, stdout.length - 7)
-        return resolve(ipfs)
-      })
+      )
     })
   }
 
-  static resolveDependencies (ipfs) {
+  static resolveDependencies(ipfs) {
     return new Promise((resolve, reject) => {
-      execFile('ipfs',
-      ['refs', '-r', '--format=<src> <dst> <linkname>', ipfs],
-      {maxBuffer: 1024 * 500},
-      (err, stdout, stderr) => {
-        if (err) return reject(new Error(stderr))
-        const dependencies = stdout.split(/\r?\n/).filter(row => row).map(row => {
-          const data = row.replace(/\s+/g, ' ').trim().split(' ') // row format: src | ipfsHash | name
-          return {
-            src: data[0],
-            ipfs: data[1],
-            name: data[2]
-          }
-        })
-        return resolve(dependencies)
-      })
+      execFile(
+        'ipfs',
+        ['refs', '-r', '--format=<src> <dst> <linkname>', ipfs],
+        { maxBuffer: 1024 * 500 },
+        (err, stdout, stderr) => {
+          if (err) return reject(new Error(stderr))
+          const dependencies = stdout
+            .split(/\r?\n/)
+            .filter(row => row)
+            .map(row => {
+              const data = row
+                .replace(/\s+/g, ' ')
+                .trim()
+                .split(' ') // row format: src | ipfsHash | name
+              return {
+                src: data[0],
+                ipfs: data[1],
+                name: data[2]
+              }
+            })
+          return resolve(dependencies)
+        }
+      )
     })
   }
 
-  static connectPeer (peerId) {
+  static connectPeer(peerId) {
     return new Promise((resolve, reject) => {
-      execFile('ipfs', ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`], (err, stdout, stderr) => {
-        if (err) return reject(new Error('Could not connect to peer: ' + peerId))
-        return resolve()
-      })
+      execFile(
+        'ipfs',
+        ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`],
+        (err, stdout, stderr) => {
+          if (err)
+            return reject(new Error('Could not connect to peer: ' + peerId))
+          return resolve()
+        }
+      )
     })
   }
 }

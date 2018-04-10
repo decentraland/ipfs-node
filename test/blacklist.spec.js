@@ -35,8 +35,10 @@ describe('Blacklist', () => {
   describe('checkIPFS', () => {
     it('should fulfilled if env is not loaded', () => {
       process.env.BLACKLIST_URL = ''
-      expect(Blacklist.checkIPFS(ipfs), 'expect isBlacklisted to be false').be.fulfilled
-      expect(axiosGet.called, 'expect axios.get have not been called').to.be.false
+      expect(Blacklist.checkIPFS(ipfs), 'expect isBlacklisted to be false').be
+        .fulfilled
+      expect(axiosGet.called, 'expect axios.get have not been called').to.be
+        .false
     })
 
     it('should throw 403 if ipfs is blacklisted', () => {
@@ -58,16 +60,20 @@ describe('Blacklist', () => {
             })
           )
       )
-      expect(Blacklist.checkIPFS(ipfs), 'expect isBlacklisted to be false').be.fulfilled
-      expect(axiosGet.called, 'expect axios.get have not been called').to.be.true
+      expect(Blacklist.checkIPFS(ipfs), 'expect isBlacklisted to be false').be
+        .fulfilled
+      expect(axiosGet.called, 'expect axios.get have not been called').to.be
+        .true
     })
   })
 
   describe('checkParcel', () => {
     it('should fulfilled if env is not loaded', () => {
       process.env.BLACKLIST_URL = ''
-      expect(Blacklist.checkParcel(x, y), 'expect isBlacklisted to be false').be.fulfilled
-      expect(axiosGet.called, 'expect axios.get have not been called').to.be.false
+      expect(Blacklist.checkParcel(x, y), 'expect isBlacklisted to be false').be
+        .fulfilled
+      expect(axiosGet.called, 'expect axios.get have not been called').to.be
+        .false
     })
 
     it('should throw 403 if parcel is blacklisted', () => {
@@ -89,8 +95,10 @@ describe('Blacklist', () => {
             })
           )
       )
-      expect(Blacklist.checkParcel(x, y), 'expect isBlacklisted to be false').be.fulfilled
-      expect(axiosGet.called, 'expect axios.get have not been called').to.be.true
+      expect(Blacklist.checkParcel(x, y), 'expect isBlacklisted to be false').be
+        .fulfilled
+      expect(axiosGet.called, 'expect axios.get have not been called').to.be
+        .true
     })
   })
 })
