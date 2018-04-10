@@ -10,7 +10,7 @@ jobs:
       - run: sudo apt-get update && sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
       - run: wget https://dist.ipfs.io/go-ipfs/v0.4.11/go-ipfs_v0.4.11_linux-amd64.tar.gz
       - run: tar xvfz go-ipfs_v0.4.11_linux-amd64.tar.gz
-      - run: cp go-ipfs/ipfs /usr/local/bin
+      - run: sudo cp go-ipfs/ipfs /usr/local/bin
       - run: ipfs init
       - run: ipfs deaemon
       - restore_cache:
