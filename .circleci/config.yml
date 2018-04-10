@@ -7,9 +7,7 @@ jobs:
       NODE_ENV: "test"
     steps:
       - checkout
-      - run:
-        name: install-libusb
-        command: sudo apt-get update && sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
+      - run: sudo apt-get update && sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
       - run: sudo npm install node-hid
       - run: cd /opt/ipfs
       - run: wget https://dist.ipfs.io/go-ipfs/v0.4.11/go-ipfs_v0.4.11_linux-amd64.tar.gz
