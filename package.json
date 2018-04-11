@@ -5,9 +5,12 @@
   "main": "src/server.js",
   "scripts": {
     "start:prod": "pm2-docker start ./pm2_config.json",
-    "test": "tape test/*.js && standard",
+    "test": "NODE_ENV=test nyc mocha  --timeout 120000 --exit",
     "docker:run": "docker run --name=ipfs-node -v $PWD/db:/root/app/ipfs-node/db  -v $PWD/data:/root/.ipfs  -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -p 3000:3000 -p 4001:4001 -p 5001:5001 -p 8080:8080 uploader:latest",
     "start": "nodemon src/server.js"
+  },
+  "nyc": {
+    "include": ["src"]
   },
   "author": "The Decentraland Team",
   "license": "Apache-2.0",
@@ -35,8 +38,14 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-polyfill": "^6.26.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "chai-http": "^4.0.0",
+    "mocha": "^5.0.5",
     "nodemailer": "^4.6.3",
     "nodemon": "^1.14.12",
+    "nyc": "^11.6.0",
+    "sinon": "^4.5.0",
     "tunnel-ssh": "^4.1.4"
   }
 }

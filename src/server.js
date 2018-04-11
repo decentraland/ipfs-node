@@ -5,7 +5,8 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const IPFS = require('./ipfs')
 const { setLogger, errorHandler, notFound } = require('./utils')
-const { connectBlockchain } = require('./ethereum')
+const Ethereum = require('./ethereum')
+const DB = require('./database')
 
 const app = express()
 
@@ -34,6 +35,11 @@ app.use(errorHandler)
 
 const port = process.env.PORT || 3000
 app.listen(port, () => {
-  connectBlockchain()
+  if (process.env.NODE_ENV !== 'test') {
+    Ethereum.connectBlockchain()
+    DB.connect()
+  }
   console.log(`Listening on port ${port}...`)
 })
+
+module.exports = app

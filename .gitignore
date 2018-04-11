@@ -7,4 +7,5 @@ data
 logs
 redis-data
 /deployment
+.nyc_output
 

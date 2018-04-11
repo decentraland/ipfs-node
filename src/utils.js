@@ -3,12 +3,20 @@ const path = require('path')
 const morgan = require('morgan')
 const createError = require('http-errors')
 
-function formatDate (date) {
+function formatDate(date) {
   const monthNames = [
-    'January', 'February', 'March',
-    'April', 'May', 'June', 'July',
-    'August', 'September', 'October',
-    'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
   ]
 
   const day = date.getDate()
@@ -19,21 +27,22 @@ function formatDate (date) {
 }
 
 module.exports = {
-  setLogger: (app) => {
+  setLogger: app => {
     let dir = './logs'
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
     }
-    const accessLogStream = fs.createWriteStream(path.join(__dirname, `../logs/${formatDate(new Date())}.log`), {flags: 'a'})
-    app.use(morgan('combined', {stream: accessLogStream}))
+    const accessLogStream = fs.createWriteStream(
+      path.join(__dirname, `../logs/${formatDate(new Date())}.log`),
+      { flags: 'a' }
+    )
+    app.use(morgan('combined', { stream: accessLogStream }))
   },
   errorHandler: (err, req, res, next) => {
     if (!err.statusCode) {
       err.statusCode = 500
     }
-    res
-    .status(err.statusCode)
-    .json({ error: err.message })
+    res.status(err.statusCode).json({ error: err.message })
   },
   notFound: (req, res, next) => {
     if (!req.route) {
