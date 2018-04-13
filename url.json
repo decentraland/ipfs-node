@@ -1,3 +1,4 @@
 {
-  "staging": "http://ipfs.decentraland.zone:3000/api"
+  "staging": "https://ipfs.decentraland.zone:3000/api",
+  "production": "https://ipfs.decentraland.org/api"
 }
