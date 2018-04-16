@@ -33,7 +33,7 @@ describe('S3Service', () => {
   beforeEach(() => {
     S3 = ctx.stub(AWS, 'S3').callsFake(() => ({
       headObject: () => true,
-      upload: () => true,
+      upload: () => true
     }))
 
     const inStream = new stream.Readable()
@@ -71,10 +71,7 @@ describe('S3Service', () => {
         'expect fileExist to be called 4 times'
       ).to.be.equal(4)
 
-      expect(
-        upload.callCount,
-        'expect upload to be called'
-      ).to.be.equal(4)
+      expect(upload.callCount, 'expect upload to be called').to.be.equal(4)
     })
 
     it('should not upload files cause they exist', async () => {
@@ -85,11 +82,7 @@ describe('S3Service', () => {
         'expect fileExist to be called 4 times'
       ).to.be.equal(4)
 
-      expect(
-        upload.callCount,
-        'expect upload to be called'
-      ).to.be.equal(0)
+      expect(upload.callCount, 'expect upload to be called').to.be.equal(0)
     })
-
   })
 })

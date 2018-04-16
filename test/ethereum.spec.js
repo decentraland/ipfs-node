@@ -34,7 +34,8 @@ describe('Ethereum', () => {
   describe('connectBlockchain', () => {
     it('should connect', async () => {
       process.env.RPC_URL = 'https://ropsten.infura.io/'
-      expect(Ethereum.connectBlockchain(), `expect connectBlockchain`).to.be.fulfilled
+      expect(Ethereum.connectBlockchain(), `expect connectBlockchain`).to.be
+        .fulfilled
     })
 
     it('should retry to connect', async () => {
@@ -45,8 +46,8 @@ describe('Ethereum', () => {
       await new Promise(r =>
         setTimeout(() => {
           expect(
-           web3Connect.calledTwice,
-           `expect web3Eth.connect to be called twice`
+            web3Connect.calledTwice,
+            `expect web3Eth.connect to be called twice`
           ).be.true
           r()
         }, 4000)
