@@ -1,8 +1,10 @@
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { sandbox } = require('sinon')
-const S3Service = require('../src/S3Service')
 const AWS = require('aws-sdk')
+const request = require('request')
+const stream = require('stream')
+const S3Service = require('../src/S3Service')
 
 chai.use(chaiAsPromised)
 
@@ -24,6 +26,8 @@ const projectStructure = [
 ]
 const expect = chai.expect
 let S3
+let fileExist
+let upload
 
 describe('S3Service', () => {
   beforeEach(() => {
@@ -31,6 +35,18 @@ describe('S3Service', () => {
       headObject: () => true,
       upload: () => true,
     }))
+
+    const inStream = new stream.Readable()
+    inStream.push('ABCDEFGHIJKLM')
+    inStream.push(null)
+
+    fileExist = ctx.stub(S3Service, 'fileExist').callsFake(() => false)
+    upload = ctx.stub(S3Service, 'upload').callsFake((name, resolve) => {
+      const s = new stream.PassThrough()
+      setTimeout(() => resolve(), 5)
+      return s
+    })
+    ctx.stub(request, 'get').returns(inStream)
   })
 
   afterEach(() => {
@@ -46,19 +62,34 @@ describe('S3Service', () => {
     })
   })
 
-  //describe('fileExist', () => {
-  //  it('should check if file exist', async () => {
-  //    const res = S3Service.fileExist('file')
-  //    S3Instance = new S3()
-  //    expect(
-  //      S3.called,
-  //      'expect S3 to be called'
-  //    ).to.be.true
-  //
-  //    expect(
-  //      S3.headObject.called,
-  //      'expect S3.headObject to be called'
-  //    ).to.be.true
-  //  })
-  //})
+  describe('uploadProject', () => {
+    it('should upload files', async () => {
+      await S3Service.uploadProject(ipfs, dependencies)
+
+      expect(
+        fileExist.callCount,
+        'expect fileExist to be called 4 times'
+      ).to.be.equal(4)
+
+      expect(
+        upload.callCount,
+        'expect upload to be called'
+      ).to.be.equal(4)
+    })
+
+    it('should not upload files cause they exist', async () => {
+      fileExist.returns(true)
+      await S3Service.uploadProject(ipfs, dependencies)
+      expect(
+        fileExist.callCount,
+        'expect fileExist to be called 4 times'
+      ).to.be.equal(4)
+
+      expect(
+        upload.callCount,
+        'expect upload to be called'
+      ).to.be.equal(0)
+    })
+
+  })
 })

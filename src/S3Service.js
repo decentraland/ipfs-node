@@ -9,8 +9,8 @@ class S3Service {
       this.getProjectStructure(ipfs, dependencies).map(
         file =>
           new Promise(async (resolve, reject) => {
-            const shouldUploadFile = await this.fileExist(file)
-            if (shouldUploadFile) {
+            const fileExist = await this.fileExist(file)
+            if (!fileExist) {
               request
                 .get(`http://localhost:8080/ipfs/${file}`)
                 .pipe(this.upload(file, resolve, reject))
