@@ -6,6 +6,8 @@ jobs:
     environment:
       NODE_ENV: "test"
       LAND_REGISTRY_CONTRACT_ADDRESS: "0x7a73483784ab79257bb11b96fd62a2c3ae4fb75b"
+      S3_BUCKET: "test/"
+      S3_URL: "https://s3.amazonaws.com/"
     steps:
       - checkout
       - run: sudo apt-get update && sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
