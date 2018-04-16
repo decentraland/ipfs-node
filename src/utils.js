@@ -2,6 +2,8 @@ const fs = require('fs')
 const path = require('path')
 const morgan = require('morgan')
 const createError = require('http-errors')
+const base58 = require('bs58')
+const multihash = require('multihashes')
 
 function formatDate(date) {
   const monthNames = [
@@ -49,5 +51,14 @@ module.exports = {
       next(createError(404, `${req.originalUrl} not found`))
     }
     next()
-  }
+  },
+  isMultihash: (hash) => {
+    try {
+      const buffer = new Buffer(base58.decode(hash))
+      multihash.decode(buffer)
+      return true
+    } catch (e) {
+      return false
+    }
+  },
 }

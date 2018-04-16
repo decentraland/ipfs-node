@@ -9,8 +9,8 @@ RUN apt-get -y install \
 RUN npm install node-hid
 
 WORKDIR /opt/ipfs
-RUN wget https://dist.ipfs.io/go-ipfs/v0.4.11/go-ipfs_v0.4.11_linux-amd64.tar.gz
-RUN tar xvfz go-ipfs_v0.4.11_linux-amd64.tar.gz
+RUN wget https://dist.ipfs.io/go-ipfs/v0.4.14/go-ipfs_v0.4.14_linux-amd64.tar.gz
+RUN tar xvfz go-ipfs_v0.4.14_linux-amd64.tar.gz
 RUN cp go-ipfs/ipfs /usr/local/bin
 RUN ipfs init
 RUN ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
