@@ -247,7 +247,7 @@ describe('IPFS', () => {
     it('should redirect to S3', async () => {
       const res = await chai.request(server).get(`/api/get/${ipfs}`)
       expect(res, 'Expect status 302').to.redirectTo(
-        `${process.env.S3_URL}${process.env.S3_BUCKET}/${ipfs}`
+        `${process.env.S3_URL}/${process.env.S3_BUCKET}/${ipfs}`
       )
     })
 

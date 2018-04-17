@@ -14,7 +14,7 @@ module.exports = class Download {
         const ipfs = req.params.ipfs
         const file = req.params[0] ? `${ipfs}${req.params[0]}` : ipfs
         await Blacklist.checkIPFS(ipfs)
-        return res.redirect(`${process.env.S3_URL}${process.env.S3_BUCKET}/${file}`)
+        return res.redirect(`${process.env.S3_URL}/${process.env.S3_BUCKET}/${file}`)
       } catch (error) {
         next(error)
       }
