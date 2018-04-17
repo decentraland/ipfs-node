@@ -10,12 +10,11 @@ const { isMultihash } = require('./utils')
 module.exports = class Download {
   constructor() {
     this.download = async (req, res, next) => {
-      let file
       try {
         const ipfs = req.params.ipfs
-        file = req.params[0] ? `${ipfs}${req.params[0]}` : ipfs
+        const file = req.params[0] ? `${ipfs}${req.params[0]}` : ipfs
         await Blacklist.checkIPFS(ipfs)
-        return res.redirect(`${process.env.S3_URL}${process.env.S3_BUCKET}${file}`)
+        return res.redirect(`${process.env.S3_URL}${process.env.S3_BUCKET}/${file}`)
       } catch (error) {
         next(error)
       }

@@ -67,9 +67,7 @@ class S3Service {
     let dir = [{ name: ipfs, ipfs }]
     return dependencies.reduce((acc, dependency) => {
       if (dir[dir.length - 1].ipfs !== dependency.src) {
-        const index = dir.findIndex(function(path) {
-          return path.ipfs === dependency.src
-        })
+        const index = dir.findIndex((path) => path.ipfs === dependency.src)
         dir = dir.slice(0, index + 1)
       }
       if (dependency.name.indexOf('.') === -1) {
@@ -77,9 +75,7 @@ class S3Service {
       } else {
         acc.push(
           dir
-            .map(function(path) {
-              return path.name
-            })
+            .map((path) =>  path.name)
             .join('/') +
             '/' +
             dependency.name
