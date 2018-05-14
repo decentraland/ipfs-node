@@ -1,29 +1,34 @@
-const execFile = require('child_process').execFile
-const Ethereum = require('./ethereum')
-const Blacklist = require('./blacklist')
-const DB = require('./database')
 const request = require('request')
+const execFile = require('child_process').execFile
+const createError = require('http-errors')
+const Ethereum = require('./ethereum')
+const DB = require('./database')
+const Blacklist = require('./blacklist')
+const S3Service = require('./S3Service')
+const { isMultihash } = require('./utils')
 
 module.exports = class Download {
   constructor() {
     this.download = async (req, res, next) => {
       try {
         const ipfs = req.params.ipfs
-        const file = req.params[0] ? `${ipfs}/${req.params[0]}` : ipfs
+        const file = req.params[0] ? `${ipfs}${req.params[0]}` : ipfs
         await Blacklist.checkIPFS(ipfs)
-        request.get(`http://localhost:8080/ipfs/${file}`).pipe(res)
+        return res.redirect(`${process.env.S3_URL}/${process.env.S3_BUCKET}/${file}`)
       } catch (error) {
         next(error)
       }
     }
     this.pin = async (req, res, next) => {
       try {
-        const [x, y] = [req.params.x, req.params.y]
+        const [x, y, peerId] = [req.params.x, req.params.y, req.params.peerId]
+        if (!isMultihash(peerId)) throw createError(400, `Invalid peerId: ${peerId}`)
         const ipns = await Ethereum.getIPNS(x, y)
         await Download.connectPeer(req.params.peerId)
         const ipfs = await Download.resolveIPNS(ipns)
         await Download.publishHash(ipfs)
         const dependencies = await Download.resolveDependencies(ipfs)
+        await S3Service.uploadProject(ipfs, dependencies)
         await DB.setIPFS(ipns, ipfs)
         await DB.setParcel({ x, y }, { ipns, ipfs, dependencies })
         return res.json({ ok: true, message: 'Pinning Success' })
@@ -35,19 +40,14 @@ module.exports = class Download {
       try {
         const [x, y] = [req.params.x, req.params.y]
         if (!req.query.force) {
-          // No cache
+          // Force does not check if parcel is blacklisted
           await Blacklist.checkParcel(x, y)
-          const cachedResponse = await DB.getParcel(x, y)
-          if (cachedResponse) {
-            return res.json({ ok: true, url: cachedResponse })
-          }
         }
-        const ipns = await Ethereum.getIPNS(x, y)
-        const ipfs = await Download.resolveIPNS(ipns)
-        const dependencies = await Download.resolveDependencies(ipfs)
-        const url = { ipns, ipfs, dependencies }
-        await DB.setParcel({ x, y }, url)
-        return res.json({ ok: true, url })
+        const cachedResponse = await DB.getParcel(x, y)
+        if (!cachedResponse) {
+          throw createError(404, `Parcel ${x},${y} is not pinned`)
+        }
+        return res.json({ ok: true, url: cachedResponse })
       } catch (error) {
         next(error)
       }
@@ -105,17 +105,23 @@ module.exports = class Download {
           const dependencies = stdout
             .split(/\r?\n/)
             .filter(row => row)
-            .map(row => {
-              const data = row
-                .replace(/\s+/g, ' ')
-                .trim()
-                .split(' ') // row format: src | ipfsHash | name
-              return {
-                src: data[0],
-                ipfs: data[1],
-                name: data[2]
+            .map(
+              row =>
+                row
+                  .replace(/\s+/g, ' ')
+                  .trim()
+                  .split(' ') // row format: src | ipfsHash | name
+            )
+            .reduce((dependencies, data) => {
+              if (data.length > 2) {
+                dependencies.push({
+                  src: data[0],
+                  ipfs: data[1],
+                  name: data.slice(2, data.length).join(' ') // files with spaces in the name
+                })
               }
-            })
+              return dependencies
+            }, [])
           return resolve(dependencies)
         }
       )
@@ -127,7 +133,7 @@ module.exports = class Download {
       execFile(
         'ipfs',
         ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`],
-        (err, stdout, stderr) => {
+        err => {
           if (err)
             return reject(new Error('Could not connect to peer: ' + peerId))
           return resolve()

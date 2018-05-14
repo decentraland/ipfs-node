@@ -34,7 +34,7 @@ app.use(notFound)
 app.use(errorHandler)
 
 const port = process.env.PORT || 3000
-app.listen(port, () => {
+const server = app.listen(port, () => {
   if (process.env.NODE_ENV !== 'test') {
     Ethereum.connectBlockchain()
     DB.connect()
@@ -42,4 +42,5 @@ app.listen(port, () => {
   console.log(`Listening on port ${port}...`)
 })
 
-module.exports = app
+server.timeout = 60 * 1000 * 60
+module.exports = server

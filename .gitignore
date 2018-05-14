@@ -8,4 +8,4 @@ logs
 redis-data
 /deployment
 .nyc_output
-
+newrelic_agent.log
