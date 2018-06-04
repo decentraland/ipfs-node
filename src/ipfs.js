@@ -14,7 +14,9 @@ module.exports = class Download {
         const ipfs = req.params.ipfs
         const file = req.params[0] ? `${ipfs}${req.params[0]}` : ipfs
         await Blacklist.checkIPFS(ipfs)
-        return res.redirect(`${process.env.S3_URL}/${process.env.S3_BUCKET}/${file}`)
+        return res.redirect(
+          `${process.env.S3_URL}/${process.env.S3_BUCKET}/${file}`
+        )
       } catch (error) {
         next(error)
       }
@@ -22,15 +24,18 @@ module.exports = class Download {
     this.pin = async (req, res, next) => {
       try {
         const [x, y, peerId] = [req.params.x, req.params.y, req.params.peerId]
-        if (!isMultihash(peerId)) throw createError(400, `Invalid peerId: ${peerId}`)
+        if (!isMultihash(peerId)) {
+          throw createError(400, `Invalid peerId: ${peerId}`)
+        }
         const ipns = await Ethereum.getIPNS(x, y)
-        await Download.connectPeer(req.params.peerId)
+        await Download.connectPeer(peerId)
         const ipfs = await Download.resolveIPNS(ipns)
         await Download.publishHash(ipfs)
         const dependencies = await Download.resolveDependencies(ipfs)
         await S3Service.uploadProject(ipfs, dependencies)
         await DB.setIPFS(ipns, ipfs)
         await DB.setParcel({ x, y }, { ipns, ipfs, dependencies })
+        await Download.disconnectPeer(peerId)
         return res.json({ ok: true, message: 'Pinning Success' })
       } catch (error) {
         next(error)
@@ -134,8 +139,22 @@ module.exports = class Download {
         'ipfs',
         ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`],
         err => {
-          if (err)
+          if (err) {
             return reject(new Error('Could not connect to peer: ' + peerId))
+          }
+          return resolve()
+        }
+      )
+    })
+  }
+
+  static disconnectPeer(peerId) {
+    return new Promise((resolve, reject) => {
+      execFile(
+        'ipfs',
+        ['swarm', 'disconnect', `$(ipfs swarm peers | grep ${peerId})`],
+        (err, stdout, stderr) => {
+          if (err) return reject(new Error(stderr))
           return resolve()
         }
       )

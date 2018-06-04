@@ -1,4 +1,3 @@
-// require('babel-pollyfill') // needed for pm2 to work proper
 require('newrelic')
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -42,5 +41,5 @@ const server = app.listen(port, () => {
   console.log(`Listening on port ${port}...`)
 })
 
-server.timeout = 60 * 1000 * 60
+server.timeout = 1000 * 60 * 60 // 60 minutes
 module.exports = server

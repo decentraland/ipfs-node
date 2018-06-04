@@ -26,6 +26,7 @@ let ipns
 let url
 let getIPNS
 let connectPeer
+let disconnectPeer
 let checkParcel
 let checkIPFS
 let getParcel
@@ -77,6 +78,7 @@ describe('IPFS', () => {
     checkParcel = ctx.stub(Blacklist, 'checkParcel').callsFake(() => true)
     checkIPFS = ctx.stub(Blacklist, 'checkIPFS').callsFake(() => true)
     connectPeer = ctx.stub(IPFS, 'connectPeer').callsFake(() => true)
+    disconnectPeer = ctx.stub(IPFS, 'disconnectPeer').callsFake(() => true)
     ctx.stub(DB, 'setIPFS').callsFake(() => true)
     setParcel = ctx.stub(DB, 'setParcel').callsFake(() => true)
     ctx.stub(DB, 'getIPFS').callsFake(() => null)
