@@ -52,7 +52,7 @@ module.exports = {
     }
     next()
   },
-  isMultihash: (hash) => {
+  isMultihash: hash => {
     try {
       const buffer = new Buffer(base58.decode(hash))
       multihash.decode(buffer)
@@ -60,5 +60,5 @@ module.exports = {
     } catch (e) {
       return false
     }
-  },
+  }
 }

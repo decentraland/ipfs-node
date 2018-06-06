@@ -15,6 +15,9 @@ const y = 1
 const ipns = 'IPNS'
 const expect = chai.expect
 let decodeLandData
+/* eslint-disable */
+let getContracts // use for ethereum.js to get parcel metadata
+/* eslint-enable */
 
 describe('Ethereum', () => {
   beforeEach(() => {
@@ -34,7 +37,7 @@ describe('Ethereum', () => {
   describe('connectBlockchain', () => {
     it('should connect', async () => {
       process.env.RPC_URL = 'https://ropsten.infura.io/'
-      expect(Ethereum.connectBlockchain(), `expect connectBlockchain`).to.be
+      expect(Ethereum.connectBlockchain(), 'expect connectBlockchain').to.be
         .fulfilled
     })
 
@@ -47,7 +50,7 @@ describe('Ethereum', () => {
         setTimeout(() => {
           expect(
             web3Connect.calledTwice,
-            `expect web3Eth.connect to be called twice`
+            'expect web3Eth.connect to be called twice'
           ).be.true
           r()
         }, 4000)
@@ -64,8 +67,8 @@ describe('Ethereum', () => {
       decodeLandData.callsFake(() => '')
       expect(
         Ethereum.getIPNS(x, y),
-        `expect IPNS not found exception`
-      ).be.rejectedWith(`IPNS not found`)
+        'expect IPNS not found exception'
+      ).be.rejectedWith('IPNS not found')
     })
   })
 })

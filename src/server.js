@@ -20,7 +20,7 @@ setLogger(app)
 // IPFS Handler
 const ipfs = new IPFS()
 
-app.post('/api/pin/:peerId/:x/:y', ipfs.pin)
+app.post('/api/pin/:x/:y', ipfs.pin)
 
 app.get('/api/get/:ipfs*?', ipfs.download)
 

@@ -26,7 +26,9 @@ let ipns
 let url
 let getIPNS
 let connectPeer
-let disconnectPeer
+/* eslint-disable */
+let disconnectPeer // used for ipfs.js to mock disconnect peer
+/* eslint-enable */
 let checkParcel
 let checkIPFS
 let getParcel
@@ -109,11 +111,28 @@ describe('IPFS', () => {
       })
       const res = await chai
         .request(server)
-        .post(`/api/pin/${peerId}/${x}/${y}`)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs })
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(
         JSON.stringify(res.body),
         'Expect body to pinning success'
+      ).to.be.equal(resExpected)
+    })
+
+    it('should not pin files if ipfs expected is different from resolved', async () => {
+      const expectedIPFS = '1'
+      const resExpected = JSON.stringify({
+        error: `The resolved IPFS hash doesn't match the expected IPFS hash ${expectedIPFS}. Please wait a few minutes and pin again`
+      })
+      const res = await chai
+        .request(server)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs: expectedIPFS })
+      expect(res.status, 'Expect status 404').to.be.equal(404)
+      expect(
+        JSON.stringify(res.body),
+        `The resolved IPFS hash doesn't match the expected IPFS hash ${expectedIPFS}. Please wait a few minutes and pin again`
       ).to.be.equal(resExpected)
     })
 
@@ -122,7 +141,10 @@ describe('IPFS', () => {
       const resExpected = JSON.stringify({
         error: 'Invalid peerId: peerId'
       })
-      const res = await chai.request(server).post(`/api/pin/peerId/${x}/${y}`)
+      const res = await chai
+        .request(server)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId: 'peerId', ipfs })
       expect(
         res.status,
         'Expect status 400: Invalid peerId format'
@@ -140,7 +162,8 @@ describe('IPFS', () => {
       })
       const res = await chai
         .request(server)
-        .post(`/api/pin/${peerId}/${x}/${y}`)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs })
       expect(
         res.status,
         'Expect status 500: could not connect to peer'
@@ -158,7 +181,8 @@ describe('IPFS', () => {
       })
       const res = await chai
         .request(server)
-        .post(`/api/pin/${peerId}/${x}/${y}`)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs })
       expect(
         res.status,
         'Expect status 500: could not resolve name'
@@ -174,7 +198,8 @@ describe('IPFS', () => {
       const resExpected = JSON.stringify({ error: 'IPNS not found' })
       const res = await chai
         .request(server)
-        .post(`/api/pin/${peerId}/${x}/${y}`)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs })
       expect(res.status, 'Expect status 404').to.be.equal(404)
       expect(
         JSON.stringify(res.body),
@@ -212,7 +237,7 @@ describe('IPFS', () => {
         .false
       expect(
         JSON.stringify(res.body),
-        `Expect body to have the ipfs data`
+        'Expect body to have the ipfs data'
       ).to.be.equal(resExpected)
     })
 

@@ -6,7 +6,7 @@ This is a node.js express app that uses the go-ipfs client (the js-ipfs client [
 
 | Endpoint| Method | Response |
 | ------------- |:-------------:|-------------|
-| api/pin/:peerId/:x/:y | POST | { data: object } | 
+| api/pin/:x/:y | POST | { data: object } |
 | api/resolve/:x/:y | GET | { url: { ipns: string, ipfs: string, dependencies: array } } | 
 | api/get/:ipfs/:file* | GET | file | 
 
@@ -49,7 +49,8 @@ Assuming `QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK` is the node peerId
 and there is an IPNS  inside the parcel (1,2)
 
 ```http
-POST api/pin/QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK/1/2
+POST api/pin/1/2
+BODY { peerId: 'QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' , ipfs: 'QmaxQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' }
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -61,7 +62,8 @@ Content-Type: application/json
 
 
 ```http
-POST api/pin/QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK/1/2
+POST api/pin/1/2
+BODY { peerId: 'QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' , ipfs: 'QmaxQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' }
 HTTP/1.1 404 Not found
 Content-Type: application/json
 
@@ -71,7 +73,8 @@ Content-Type: application/json
 ```
 
 ```http
-POST api/pin/QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK/1/2
+POST api/pin/1/2
+BODY { peerId: 'QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' , ipfs: 'QmaxQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' }
 HTTP/1.1 500 
 Content-Type: application/json
 

@@ -1,7 +1,6 @@
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 const { sandbox } = require('sinon')
-const AWS = require('aws-sdk')
 const request = require('request')
 const stream = require('stream')
 const S3Service = require('../src/S3Service')
@@ -25,17 +24,11 @@ const projectStructure = [
   'hash/file4.txt'
 ]
 const expect = chai.expect
-let S3
 let fileExist
 let upload
 
 describe('S3Service', () => {
   beforeEach(() => {
-    S3 = ctx.stub(AWS, 'S3').callsFake(() => ({
-      headObject: () => true,
-      upload: () => true
-    }))
-
     const inStream = new stream.Readable()
     inStream.push('ABCDEFGHIJKLM')
     inStream.push(null)

@@ -1,4 +1,3 @@
-const request = require('request')
 const execFile = require('child_process').execFile
 const createError = require('http-errors')
 const Ethereum = require('./ethereum')
@@ -23,13 +22,24 @@ module.exports = class Download {
     }
     this.pin = async (req, res, next) => {
       try {
-        const [x, y, peerId] = [req.params.x, req.params.y, req.params.peerId]
+        const { x, y } = req.params
+        const [expectedIPFS, peerId] = [req.body.ipfs, req.body.peerId]
+
         if (!isMultihash(peerId)) {
           throw createError(400, `Invalid peerId: ${peerId}`)
         }
+
         const ipns = await Ethereum.getIPNS(x, y)
         await Download.connectPeer(peerId)
         const ipfs = await Download.resolveIPNS(ipns)
+
+        if (ipfs !== expectedIPFS) {
+          throw createError(
+            404,
+            `The resolved IPFS hash doesn't match the expected IPFS hash ${expectedIPFS}. Please wait a few minutes and pin again`
+          )
+        }
+
         await Download.publishHash(ipfs)
         const dependencies = await Download.resolveDependencies(ipfs)
         await S3Service.uploadProject(ipfs, dependencies)
