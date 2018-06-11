@@ -8,7 +8,7 @@ class Database {
       redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST)
     )
     if (process.env.REDIS_PASSWORD) {
-      this.client.auth(process.env.REDIS_PASSWORD)
+      client.auth(process.env.REDIS_PASSWORD)
     }
   }
 
@@ -28,6 +28,10 @@ class Database {
   static async getIPFS(ipns) {
     const ipfs = await client.getAsync(ipns)
     return ipfs
+  }
+
+  static getAll() {
+    return client.keysAsync('*')
   }
 }
 
