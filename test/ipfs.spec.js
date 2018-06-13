@@ -120,7 +120,7 @@ describe('IPFS', () => {
       ).to.be.equal(resExpected)
     })
 
-    it('should always pin if not expected hash is provided', async () => {
+    it('should always pin if no expected hash is provided', async () => {
       const expectedIPFS = undefined
       const resExpected = JSON.stringify({
         ok: true,
