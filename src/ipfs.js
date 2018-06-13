@@ -33,7 +33,7 @@ module.exports = class Download {
         await Download.connectPeer(peerId)
         const ipfs = await Download.resolveIPNS(ipns)
 
-        if (ipfs !== expectedIPFS) {
+        if (expectedIPFS && ipfs !== expectedIPFS) {
           throw createError(
             404,
             `The resolved IPFS hash doesn't match the expected IPFS hash ${expectedIPFS}. Please wait a few minutes and pin again`

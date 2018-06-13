@@ -120,6 +120,23 @@ describe('IPFS', () => {
       ).to.be.equal(resExpected)
     })
 
+    it('should always pin if not expected hash is provided', async () => {
+      const expectedIPFS = undefined
+      const resExpected = JSON.stringify({
+        ok: true,
+        message: 'Pinning Success'
+      })
+      const res = await chai
+        .request(server)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs: expectedIPFS })
+      expect(res.status, 'Expect status 200').to.be.equal(200)
+      expect(
+        JSON.stringify(res.body),
+        'Expect body to pinning success'
+      ).to.be.equal(resExpected)
+    })
+
     it('should not pin files if ipfs expected is different from resolved', async () => {
       const expectedIPFS = '1'
       const resExpected = JSON.stringify({
