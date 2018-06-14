@@ -26,9 +26,6 @@ let ipns
 let url
 let getIPNS
 let connectPeer
-/* eslint-disable */
-let disconnectPeer // used for ipfs.js to mock disconnect peer
-/* eslint-enable */
 let checkParcel
 let checkIPFS
 let getParcel
@@ -80,7 +77,6 @@ describe('IPFS', () => {
     checkParcel = ctx.stub(Blacklist, 'checkParcel').callsFake(() => true)
     checkIPFS = ctx.stub(Blacklist, 'checkIPFS').callsFake(() => true)
     connectPeer = ctx.stub(IPFS, 'connectPeer').callsFake(() => true)
-    disconnectPeer = ctx.stub(IPFS, 'disconnectPeer').callsFake(() => true)
     ctx.stub(DB, 'setIPFS').callsFake(() => true)
     setParcel = ctx.stub(DB, 'setParcel').callsFake(() => true)
     ctx.stub(DB, 'getIPFS').callsFake(() => null)
@@ -113,6 +109,23 @@ describe('IPFS', () => {
         .request(server)
         .post(`/api/pin/${x}/${y}`)
         .send({ peerId, ipfs })
+      expect(res.status, 'Expect status 200').to.be.equal(200)
+      expect(
+        JSON.stringify(res.body),
+        'Expect body to pinning success'
+      ).to.be.equal(resExpected)
+    })
+
+    it('should always pin if no expected hash is provided', async () => {
+      const expectedIPFS = undefined
+      const resExpected = JSON.stringify({
+        ok: true,
+        message: 'Pinning Success'
+      })
+      const res = await chai
+        .request(server)
+        .post(`/api/pin/${x}/${y}`)
+        .send({ peerId, ipfs: expectedIPFS })
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(
         JSON.stringify(res.body),

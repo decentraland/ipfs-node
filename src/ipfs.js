@@ -33,7 +33,7 @@ module.exports = class Download {
         await Download.connectPeer(peerId)
         const ipfs = await Download.resolveIPNS(ipns)
 
-        if (ipfs !== expectedIPFS) {
+        if (expectedIPFS && ipfs !== expectedIPFS) {
           throw createError(
             404,
             `The resolved IPFS hash doesn't match the expected IPFS hash ${expectedIPFS}. Please wait a few minutes and pin again`
@@ -45,7 +45,6 @@ module.exports = class Download {
         await S3Service.uploadProject(ipfs, dependencies)
         await DB.setIPFS(ipns, ipfs)
         await DB.setParcel({ x, y }, { ipns, ipfs, dependencies })
-        await Download.disconnectPeer(peerId)
         return res.json({ ok: true, message: 'Pinning Success' })
       } catch (error) {
         next(error)
@@ -152,19 +151,6 @@ module.exports = class Download {
           if (err) {
             return reject(new Error('Could not connect to peer: ' + peerId))
           }
-          return resolve()
-        }
-      )
-    })
-  }
-
-  static disconnectPeer(peerId) {
-    return new Promise((resolve, reject) => {
-      execFile(
-        'ipfs',
-        ['swarm', 'disconnect', `$(ipfs swarm peers | grep ${peerId})`],
-        (err, stdout, stderr) => {
-          if (err) return reject(new Error(stderr))
           return resolve()
         }
       )
