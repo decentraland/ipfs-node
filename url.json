@@ -1,4 +1,4 @@
 {
   "staging": "https://ipfs.decentraland.zone/api/v1",
-  "production": "https://ipfs.decentraland.org/api"
+  "production": "https://ipfs.decentraland.org/api/v1"
 }
