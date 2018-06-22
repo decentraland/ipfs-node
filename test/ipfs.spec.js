@@ -99,6 +99,7 @@ describe('IPFS', () => {
     ctx.restore()
     await removeFile()
   })
+
   describe('Pin', () => {
     it('should pin files', async () => {
       const resExpected = JSON.stringify({
@@ -109,6 +110,8 @@ describe('IPFS', () => {
         .request(server)
         .post(`/api/pin/${x}/${y}`)
         .send({ peerId, ipfs })
+      console.log('body', res.body)
+
       expect(res.status, 'Expect status 200').to.be.equal(200)
       expect(
         JSON.stringify(res.body),

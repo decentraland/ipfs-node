@@ -1,3 +1,4 @@
+const request = require('request')
 const execFile = require('child_process').execFile
 const createError = require('http-errors')
 const Ethereum = require('./ethereum')
@@ -6,7 +7,7 @@ const Blacklist = require('./blacklist')
 const S3Service = require('./S3Service')
 const { isMultihash } = require('./utils')
 
-module.exports = class Download {
+class Download {
   constructor() {
     this.download = async (req, res, next) => {
       try {
@@ -20,6 +21,7 @@ module.exports = class Download {
         next(error)
       }
     }
+
     this.pin = async (req, res, next) => {
       try {
         const { x, y } = req.params
@@ -41,15 +43,16 @@ module.exports = class Download {
         }
 
         await Download.publishHash(ipfs)
-        const dependencies = await Download.resolveDependencies(ipfs)
-        await S3Service.uploadProject(ipfs, dependencies)
+        const { dependencies, contents } = await Download.getProjectStructure(ipfs, await Download.resolveDependencies(ipfs))
+        await S3Service.uploadProject(ipfs, dependencies, contents)
         await DB.setIPFS(ipns, ipfs)
-        await DB.setParcel({ x, y }, { ipns, ipfs, dependencies })
+        await DB.setParcel({ x, y }, { version: 2, ipns, ipfs, dependencies, lastModified: new Date().toISOString() })
         return res.json({ ok: true, message: 'Pinning Success' })
       } catch (error) {
         next(error)
       }
     }
+
     this.resolve = async (req, res, next) => {
       try {
         const [x, y] = [req.params.x, req.params.y]
@@ -61,11 +64,32 @@ module.exports = class Download {
         if (!cachedResponse) {
           throw createError(404, `Parcel ${x},${y} is not pinned`)
         }
-        return res.json({ ok: true, url: cachedResponse })
+        return res.json({
+          ok: true,
+          url: Download.mapResponse(cachedResponse)
+        })
       } catch (error) {
         next(error)
       }
     }
+  }
+
+  static mapResponse(entry) {
+    if (entry.version === 2) {
+      return {
+        ipfs: entry.ipfs,
+        ipns: entry.ipns,
+        lastModified: entry.lastModified,
+        dependencies: entry.dependencies
+          .filter(dep => dep.type === 'file')
+          .map(dep => {
+            const { type, ...data } = dep // eslint-disable-line 
+            return data
+          })
+      }
+    }
+
+    return entry
   }
 
   static publishHash(ipfs) {
@@ -128,14 +152,14 @@ module.exports = class Download {
             )
             .reduce((dependencies, data) => {
               if (data.length > 2) {
-                dependencies.push({
+                dependencies[data[1]] = {
                   src: data[0],
                   ipfs: data[1],
                   name: data.slice(2, data.length).join(' ') // files with spaces in the name
-                })
+                }
               }
               return dependencies
-            }, [])
+            }, {})
           return resolve(dependencies)
         }
       )
@@ -156,4 +180,70 @@ module.exports = class Download {
       )
     })
   }
+
+  static async getProjectStructure(rootHash, dependencies) {
+    let deps = []
+    let contents = {}
+
+    await Promise.all(Object.values(dependencies).map(async dep => {
+      // If we have a parent
+      if (dep.src.trim().length) {
+        let path = ''
+
+        // If the parent is the root hash, we are done
+        if (dep.src === rootHash) {
+          path = `/${dep.name}`
+        } else {
+          // If the parent is something else, we will find the absolute path up until rootHash
+          path = Download.resolvePath(dep.ipfs, dependencies, rootHash)
+        }
+
+        const { content, ...data } = await Download.getDependency(rootHash + path)
+        contents[dep.ipfs] = content
+        deps.push({ ...dep, ...data, path })
+      } else {
+        console.log(`Skipping malformed parent ipfs hash: "${dep.src}"`)
+      }
+    }))
+
+    return { dependencies: deps, contents }
+  }
+
+  static getDependency(path) {
+    return new Promise((resolve, reject) => {
+      request
+        .get(`http://localhost:8080/ipfs/${path}`, (e, response, body) => {
+          if (!response.headers['accept-ranges']) {
+            // ^ Directories don't contain this header
+            resolve({
+              type: 'directory',
+              size: 0,
+              contentType: 'text/directory',
+              content: null
+            })
+          } else {
+            resolve({
+              type: 'file',
+              size: parseInt(response.headers['content-length'], 10) || 0,
+              contentType: response.headers['content-type'],
+              content: response.body
+            })
+          }
+        })
+    })
+  }
+
+  static resolvePath(hash, dependencies, rootHash) {
+    let path = ''
+
+    if (dependencies[hash].src !== rootHash) {
+      path = path + Download.resolvePath(dependencies[hash].src, dependencies, rootHash)
+    }
+
+    path = path + '/' + dependencies[hash].name
+
+    return path
+  }
 }
+
+module.exports = Download

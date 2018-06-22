@@ -8,6 +8,8 @@ const Ethereum = require('./ethereum')
 const DB = require('./database')
 
 const app = express()
+const ipfs = new IPFS()
+const v1 = express.Router();
 
 app.use(cors())
 
@@ -17,20 +19,18 @@ app.use(bodyParser.json({ limit: '10kb' }))
 
 setLogger(app)
 
-// IPFS Handler
-const ipfs = new IPFS()
+v1.post('/pin/:x/:y', ipfs.pin)
+v1.get('/crash', () => {
+  console.log('crashing')
+  process.exit(1)
+})
+v1.get('/get/:ipfs*?', ipfs.download)
+v1.get('/resolve/:x/:y', ipfs.resolve)
+v1.get('/ping', (req, res, next) => res.json({ message: 'pong' }))
+v1.use(notFound)
+v1.use(errorHandler)
 
-app.post('/api/pin/:x/:y', ipfs.pin)
-
-app.get('/api/get/:ipfs*?', ipfs.download)
-
-app.get('/api/resolve/:x/:y', ipfs.resolve)
-
-app.get('/ping', (req, res, next) => res.json({ message: 'pong' })) // Used for ELB to akc a healthy state
-
-app.use(notFound)
-
-app.use(errorHandler)
+app.use('/api/v1', v1);
 
 const port = process.env.PORT || 3000
 const server = app.listen(port, () => {

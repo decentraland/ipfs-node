@@ -1,33 +1,37 @@
-const request = require('request')
 const AWS = require('aws-sdk')
-const stream = require('stream')
-const bucket = process.env.S3_BUCKET
+const BUCKET = process.env.S3_BUCKET
 
 class S3Service {
-  static uploadProject(ipfs, dependencies) {
+  /**
+   * Uploads project to S3
+   * @param ipfs the root hash
+   * @param dependencies the array of dependencies containing ipfs, src, size, path, name
+   * @param contents a dictionary of { [ipfs: string]: string } for all dependency contents
+   */
+  static uploadProject(ipfs, dependencies, contents) {
     return Promise.all(
-      this.getProjectStructure(ipfs, dependencies).map(
-        file =>
-          new Promise(async (resolve, reject) => {
-            const fileExist = await this.fileExist(file)
-            if (!fileExist) {
-              request
-                .get(`http://localhost:8080/ipfs/${file}`)
-                .pipe(this.upload(file, resolve, reject))
-            } else {
-              resolve()
-            }
-          })
-      )
+      dependencies.map(async dep => {
+        if (dep.type === 'file') {
+          const fullPath = ipfs + dep.path
+          const fileExist = await this.fileExist(fullPath)
+          if (!fileExist) {
+            return this.upload(fullPath, contents[dep.ipfs])
+          }
+        }
+      })
     )
   }
 
+  /**
+   * Returns true if the given hash matches an 
+   * @param path the path to a file (beggining with the root ipfs hash)
+   */
   static fileExist(name) {
-    const S3 = new AWS.S3()
-    return new Promise(resolve =>
+    return new Promise(resolve => {
+      const S3 = new AWS.S3()
       S3.headObject(
         {
-          Bucket: bucket,
+          Bucket: BUCKET,
           Key: name
         },
         err => {
@@ -38,45 +42,27 @@ class S3Service {
           }
         }
       )
-    )
-  }
-
-  static upload(name, resolve, reject) {
-    const S3 = new AWS.S3()
-    const pass = new stream.PassThrough()
-    S3.upload(
-      {
-        Bucket: bucket,
-        Key: name,
-        Body: pass,
-        ACL: 'public-read'
-      },
-      (err, data) => (err ? reject(err) : resolve(data))
-    )
-    return pass
+    })
   }
 
   /**
-   *
-   * @param ipfs
-   * @param dependencies
-   * @returns array of filenames with path
-   * E.g: ['hash/index.js', 'hash/folder/scene.json',..]
+   * Uploads an artifact to S3
+   * @param path the path to a file (beggining with the root ipfs hash)
+   * @param body string containing file contents
    */
-  static getProjectStructure(ipfs, dependencies) {
-    let dir = [{ name: ipfs, ipfs }]
-    return dependencies.reduce((acc, dependency) => {
-      if (dir[dir.length - 1].ipfs !== dependency.src) {
-        const index = dir.findIndex(path => path.ipfs === dependency.src)
-        dir = dir.slice(0, index + 1)
-      }
-      if (dependency.name.indexOf('.') === -1) {
-        dir.push(dependency)
-      } else {
-        acc.push(dir.map(path => path.name).join('/') + '/' + dependency.name)
-      }
-      return acc
-    }, [])
+  static upload(path, body) {
+    return new Promise((resolve, reject) => {
+      const S3 = new AWS.S3()
+      S3.upload(
+        {
+          Bucket: BUCKET,
+          Key: path,
+          Body: body,
+          ACL: 'public-read'
+        },
+        (err, data) => (err ? reject(err) : resolve(data))
+      )
+    })
   }
 }
 

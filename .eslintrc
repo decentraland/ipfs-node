@@ -1,7 +1,8 @@
 {
   "parser": "babel-eslint",
-  "extends": ["eslint:recommended", "prettier"],
-  "plugins": ["prettier"],
+  "extends": [
+    "eslint:recommended"
+  ],
   "env": {
     "es6": true,
     "node": true,
@@ -18,15 +19,22 @@
     "sourceType": "module"
   },
   "rules": {
-    "prettier/prettier": ["error", {"printWidth": 80, "singleQuote": true, "semi": false}],
     "no-console": 0,
-    "quotes": ["error", "single"],
-    "no-extra-semi": ["error"],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "no-extra-semi": [
+      "error"
+    ],
     "semi": 0,
-    "no-unused-vars": ["error", {
-      "vars": "all",
-      "args": "none",
-      "ignoreRestSiblings": false
-    }]
+    "no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "none",
+        "ignoreRestSiblings": false
+      }
+    ]
   }
 }

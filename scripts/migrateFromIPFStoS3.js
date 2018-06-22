@@ -5,6 +5,7 @@ const Download = require('../src/ipfs')
 const { isMultihash } = require('../src/utils')
 
 async function migrateFromIPFStoS3() {
+  console.log('THIS SCRIPT IS OUTDATED, DANI SHOULD CHECK THIS')
   DB.connect()
 
   const keys = await DB.getAll().filter(isMultihash)

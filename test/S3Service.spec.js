@@ -17,12 +17,6 @@ const dependencies = [
   { src: 'hash4', ipfs: 'hash5', name: 'file3.txt' },
   { src: 'hash', ipfs: 'hash6', name: 'file4.txt' }
 ]
-const projectStructure = [
-  'hash/file1.txt',
-  'hash/directory/file2.txt',
-  'hash/directory/subDirectory/file3.txt',
-  'hash/file4.txt'
-]
 const expect = chai.expect
 let fileExist
 let upload
@@ -45,14 +39,6 @@ describe('S3Service', () => {
   afterEach(() => {
     // completely restore all fakes created through the sandbox
     ctx.restore()
-  })
-  describe('getProjectStructure', () => {
-    it('should get project structure', () => {
-      expect(
-        S3Service.getProjectStructure(ipfs, dependencies).join(','),
-        'expect real project structure'
-      ).to.be.equal(projectStructure.join(','))
-    })
   })
 
   describe('uploadProject', () => {

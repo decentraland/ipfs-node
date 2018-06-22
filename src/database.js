@@ -12,8 +12,13 @@ class Database {
     }
   }
 
-  static setParcel({ x, y }, url) {
-    return client.setAsync(`${x},${y}`, JSON.stringify(url))
+  /**
+   * Persists a parcel
+   * @param coordinates an object that contains x and y number fields
+   * @param data an object that contains ipfs (string), ipns (string) and a array of dependencies
+   */
+  static setParcel({ x, y }, data) {
+    return client.setAsync(`${x},${y}`, JSON.stringify(data))
   }
 
   static async getParcel(x, y) {

@@ -26,7 +26,6 @@ services:
       - $PWD/db:/uploader/db
       - $PWD/data:/root/.ipfs
       - ~/.ssh/id_rsa:/root/.ssh/id_rsa
-      - ~/.aws/credentials:/root/.aws/credentials
     networks:
       - internal
 

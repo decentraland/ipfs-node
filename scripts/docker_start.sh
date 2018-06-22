@@ -4,4 +4,4 @@ ipfs init
 
 ipfs daemon &
 
-npm start
+node ./src/server.js
