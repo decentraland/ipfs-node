@@ -20,10 +20,6 @@ app.use(bodyParser.json({ limit: '10kb' }))
 setLogger(app)
 
 v1.post('/pin/:x/:y', ipfs.pin)
-v1.get('/crash', () => {
-  console.log('crashing')
-  process.exit(1)
-})
 v1.get('/get/:ipfs*?', ipfs.download)
 v1.get('/resolve/:x/:y', ipfs.resolve)
 v1.get('/ping', (req, res, next) => res.json({ message: 'pong' }))
