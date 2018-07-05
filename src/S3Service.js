@@ -1,40 +1,48 @@
 const AWS = require('aws-sdk')
+const request = require('request')
+const stream = require('stream')
 const BUCKET = process.env.S3_BUCKET
 
 class S3Service {
   /**
    * Uploads project to S3
    * @param ipfs the root hash
-   * @param dependencies the array of dependencies containing ipfs, src, size, path, name
-   * @param contents a dictionary of { [ipfs: string]: string } for all dependency contents
+   * @param dependencies the array of dependencies containing ipfs, src, path, name
    */
-  static uploadProject(ipfs, dependencies, contents) {
+  static uploadProject(ipfs, dependencies) {
     return Promise.all(
       dependencies.map(async dep => {
-        if (dep.type === 'file') {
-          const fullPath = ipfs + dep.path
-          const fileExist = await this.fileExist(fullPath)
+        const fullPath = ipfs + dep.path
+        const fileExist = await this.fileExists(fullPath)
+        return new Promise((resolve, reject) => {
           if (!fileExist) {
-            return this.upload(fullPath, contents[dep.ipfs])
+            console.log('uploading', fullPath)
+            request
+              .get(`http://localhost:8080/ipfs/${fullPath}`)
+              .pipe(this.upload(fullPath, resolve, reject))
+          } else {
+            resolve()
           }
-        }
+        })
       })
     )
   }
 
   /**
-   * Returns true if the given hash matches an 
-   * @param path the path to a file (beggining with the root ipfs hash)
+   * Returns size and content type for existing files or null for inexisting files
+   * @param fullPath the path to a file (beggining with the root ipfs hash)
    */
-  static fileExist(name) {
+  static fileExists(fullPath) {
+    const S3 = new AWS.S3()
+    console.log('getFileData', fullPath)
+
     return new Promise(resolve => {
-      const S3 = new AWS.S3()
       S3.headObject(
         {
           Bucket: BUCKET,
-          Key: name
+          Key: fullPath
         },
-        err => {
+        (err, data) => {
           if (err) {
             resolve(false)
           } else {
@@ -50,19 +58,21 @@ class S3Service {
    * @param path the path to a file (beggining with the root ipfs hash)
    * @param body string containing file contents
    */
-  static upload(path, body) {
-    return new Promise((resolve, reject) => {
-      const S3 = new AWS.S3()
-      S3.upload(
-        {
-          Bucket: BUCKET,
-          Key: path,
-          Body: body,
-          ACL: 'public-read'
-        },
-        (err, data) => (err ? reject(err) : resolve(data))
-      )
-    })
+  static upload(path, resolve, reject) {
+    const S3 = new AWS.S3()
+    const pass = new stream.PassThrough()
+    console.log('s3', path)
+    S3.upload(
+      {
+        Bucket: BUCKET,
+        Key: path,
+        Body: pass,
+        ACL: 'public-read'
+      },
+      (err, data) => (err ? reject(err) : resolve(data))
+    )
+
+    return pass
   }
 }
 

@@ -7,6 +7,17 @@ const Blacklist = require('./blacklist')
 const S3Service = require('./S3Service')
 const { isMultihash } = require('./utils')
 
+/**
+ * interface IDependency {
+ *  name: string // file.json
+ *  path: string // /path/to/file.json
+ *  ipfs: string // own hash
+ *  src: string // parent folder hash
+ *  size: number // 2000 (bytes),
+ *  contentType: string // mime type eg: text/xml
+ * }
+ */
+
 class Download {
   constructor() {
     this.download = async (req, res, next) => {
@@ -32,8 +43,11 @@ class Download {
         }
 
         const ipns = await Ethereum.getIPNS(x, y)
+        console.log('resolving ipns', ipns)
+        console.log('connecting to', peerId)
         await Download.connectPeer(peerId)
         const ipfs = await Download.resolveIPNS(ipns)
+        console.log('resolving ipfs', ipfs)
 
         if (expectedIPFS && ipfs !== expectedIPFS) {
           throw createError(
@@ -42,11 +56,19 @@ class Download {
           )
         }
 
+        console.log('publishing hash')
         await Download.publishHash(ipfs)
-        const { dependencies, contents } = await Download.getProjectStructure(ipfs, await Download.resolveDependencies(ipfs))
-        await S3Service.uploadProject(ipfs, dependencies, contents)
+        console.log('resolving deps')
+        const resolvedDependencies = await Download.resolveDependencies(ipfs)
+        console.log('resolvedDeps', resolvedDependencies)
+        const fullDependencies = await Download.getDependencyList(ipfs, resolvedDependencies)
+        console.log('partialDeps', fullDependencies)
+        await S3Service.uploadProject(ipfs, fullDependencies)
+        console.log('upload success')
+
         await DB.setIPFS(ipns, ipfs)
-        await DB.setParcel({ x, y }, { version: 2, ipns, ipfs, dependencies, lastModified: new Date().toISOString() })
+
+        await DB.setParcel({ x, y }, { version: 2, ipns, ipfs, dependencies: fullDependencies, lastModified: new Date().toISOString() })
         return res.json({ ok: true, message: 'Pinning Success' })
       } catch (error) {
         next(error)
@@ -81,7 +103,7 @@ class Download {
         ipns: entry.ipns,
         lastModified: entry.lastModified,
         dependencies: entry.dependencies
-          .filter(dep => dep.type === 'file')
+          .filter(dep => dep.type ? dep.type === 'file' : true)
           .map(dep => {
             const { type, ...data } = dep // eslint-disable-line 
             return data
@@ -95,12 +117,15 @@ class Download {
   static publishHash(ipfs) {
     return new Promise((resolve, reject) => {
       execFile('ipfs', ['pin', 'add', ipfs], (err, stdout, stderr) => {
+        console.log('try publish')
         if (err) {
           return reject(stderr)
         }
+
         const match = stdout.match(
           new RegExp('pinned ([a-zA-Z0-9]+) recursively')
         )
+        console.log(stdout, match)
         if (!match) {
           reject(new Error('Can not pin: ' + ipfs))
         }
@@ -117,6 +142,7 @@ class Download {
         async (err, stdout, stderr) => {
           let ipfs
           if (err) {
+            console.log('dht', err)
             // Check it with our dht
             ipfs = await DB.getIPFS(ipns)
             if (!ipfs) {
@@ -125,13 +151,16 @@ class Download {
               return resolve(ipfs)
             }
           }
+
           ipfs = stdout.substr(6, stdout.length - 7)
+          console.log('cmd ipfs', ipfs)
           return resolve(ipfs)
         }
       )
     })
   }
 
+  // Returns { [ipfs: string]: { src: string, ipfs: string, name: string } }
   static resolveDependencies(ipfs) {
     return new Promise((resolve, reject) => {
       execFile(
@@ -160,6 +189,7 @@ class Download {
               }
               return dependencies
             }, {})
+
           return resolve(dependencies)
         }
       )
@@ -181,9 +211,9 @@ class Download {
     })
   }
 
-  static async getProjectStructure(rootHash, dependencies) {
+  // Returns Pick<IDependency, "name" | "path" | "ipfs" | "src">[]
+  static async getDependencyList(rootHash, dependencies) {
     let deps = []
-    let contents = {}
 
     await Promise.all(Object.values(dependencies).map(async dep => {
       // If we have a parent
@@ -197,36 +227,33 @@ class Download {
           // If the parent is something else, we will find the absolute path up until rootHash
           path = Download.resolvePath(dep.ipfs, dependencies, rootHash)
         }
+        const fileMetadata = await Download.getFileMetadata(rootHash + path)
+        console.log('checking if', path, 'is directory', fileMetadata)
 
-        const { content, ...data } = await Download.getDependency(rootHash + path)
-        contents[dep.ipfs] = content
-        deps.push({ ...dep, ...data, path })
+        if (fileMetadata) {
+          deps.push({ ...dep, path, size: fileMetadata.size, contentType: fileMetadata.contentType })
+        }
       } else {
         console.log(`Skipping malformed parent ipfs hash: "${dep.src}"`)
       }
     }))
 
-    return { dependencies: deps, contents }
+    return deps
   }
 
-  static getDependency(path) {
+  // Agus is going to shout at me for this one.. I don't know a better way
+  static getFileMetadata(path) {
     return new Promise((resolve, reject) => {
       request
         .get(`http://localhost:8080/ipfs/${path}`, (e, response, body) => {
+          console.log('Trying to download', path)
           if (!response.headers['accept-ranges']) {
             // ^ Directories don't contain this header
-            resolve({
-              type: 'directory',
-              size: 0,
-              contentType: 'text/directory',
-              content: null
-            })
+            resolve(null)
           } else {
             resolve({
-              type: 'file',
               size: parseInt(response.headers['content-length'], 10) || 0,
               contentType: response.headers['content-type'],
-              content: response.body
             })
           }
         })

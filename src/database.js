@@ -32,6 +32,7 @@ class Database {
 
   static async getIPFS(ipns) {
     const ipfs = await client.getAsync(ipns)
+    console.log('db ipns', ipfs)
     return ipfs
   }
 
