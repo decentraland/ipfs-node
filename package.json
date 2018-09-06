@@ -9,7 +9,7 @@
     "lint:fix": "./node_modules/eslint/bin/eslint.js --fix .",
     "test": "NODE_ENV=test nyc mocha  --timeout 120000 --exit",
     "start": "nodemon src/server.js",
-    "build:image": "docker build --no-cache -t dcl-ipfs-node .",
+    "build:image": "docker build --no-cache -t ipfs-node .",
     "precommit": "lint-staged"
   },
   "prettier": {

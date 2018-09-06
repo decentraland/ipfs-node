@@ -11,8 +11,8 @@ RUN apt-get -y install \
 
 RUN npm i npm@latest -g
 WORKDIR /opt/ipfs
-RUN wget https://dist.ipfs.io/go-ipfs/v0.4.14/go-ipfs_v0.4.14_linux-amd64.tar.gz
-RUN tar xvfz go-ipfs_v0.4.14_linux-amd64.tar.gz
+RUN wget https://dist.ipfs.io/go-ipfs/v0.4.17/go-ipfs_v0.4.17_linux-amd64.tar.gz
+RUN tar xvfz go-ipfs_v0.4.17_linux-amd64.tar.gz
 RUN cp go-ipfs/ipfs /usr/local/bin
 RUN ipfs init
 RUN ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
