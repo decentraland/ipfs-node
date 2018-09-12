@@ -10,3 +10,4 @@ redis-data
 .nyc_output
 newrelic_agent.log
 redis_data
+/test/test.txt

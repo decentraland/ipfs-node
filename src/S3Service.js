@@ -13,13 +13,11 @@ class S3Service {
     return Promise.all(
       dependencies.map(async dep => {
         const fullPath = ipfs + dep.path
-        const fileExist = await this.fileExists(fullPath)
+        const fileExist = await S3Service.fileExists(fullPath)
         return new Promise((resolve, reject) => {
           if (!fileExist) {
             console.log('uploading', fullPath)
-            request
-              .get(`http://localhost:8080/ipfs/${fullPath}`)
-              .pipe(this.upload(fullPath, resolve, reject))
+            request.get(`http://localhost:8080/ipfs/${fullPath}`).pipe(S3Service.upload(fullPath, resolve, reject))
           } else {
             resolve()
           }

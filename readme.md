@@ -4,34 +4,37 @@ This is a node.js express app that uses the go-ipfs client (the js-ipfs client [
 
 ## Public API
 
-| Endpoint| Method | Response |
-| ------------- |:-------------:|-------------|
-| api/pin/:x/:y | POST | { data: object } |
-| api/resolve/:x/:y | GET | { url: { ipns: string, ipfs: string, dependencies: array } } | 
-| api/get/:ipfs/:file* | GET | file | 
+| Endpoint              | Method | Response                                                     |
+| --------------------- | :----: | ------------------------------------------------------------ |
+| api/pin/:x/:y         |  POST  | { data: object }                                             |
+| api/resolve/:x/:y     |  GET   | { url: { ipns: string, ipfs: string, dependencies: array } } |
+| api/get/:ipfs/:file\* |  GET   | file                                                         |
 
 ## Debugging
 
 You can always check commands manually, get into the container:
+
 ```
 docker exec it ipfs-node bash
 ```
+
 The command api is documented [here](https://ipfs.io/docs/commands/).
 
 ## Test environment
 
 You need to create your own source of assets and publish it. Let's say to create a 2 level deep folder structure like:
 
-- sample 
-  * child1
+- sample
+  - child1
     - text.txt
-  * child2.txt
+  - child2.txt
 
 You can upload publish your assets like:
 
 ```
 ipfs add -r ./sample
 ```
+
 This will return a list of hashes per element, take the main one from the parent directory.
 
 ```bash
@@ -44,9 +47,10 @@ This will return a list of hashes per element, take the main one from the parent
 ipfs name publish QmUt8guW4C7zDZ7WHociwudbfs83zMZ7Rkxrjkoeg3QupX
 #Published to QmNwrcEu5AiDdKZEWzFcGbWxP5j7E1z4eNC7xWaJaVjKMU: /ipfs/QmUt8guW4C7zDZ7WHociwudbfs83zMZ7Rkxrjkoeg3QupX
 ```
+
 Et voila! votre ipfs hash is up. Now you can query ipns hashes and dependencies using the API.
 Assuming `QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK` is the node peerId
-and there is an IPNS  inside the parcel (1,2)
+and there is an IPNS inside the parcel (1,2)
 
 ```http
 POST api/pin/1/2
@@ -57,9 +61,7 @@ Content-Type: application/json
 {
   "ok":true
 }
-
 ```
-
 
 ```http
 POST api/pin/1/2
@@ -75,7 +77,7 @@ Content-Type: application/json
 ```http
 POST api/pin/1/2
 BODY { peerId: 'QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' , ipfs: 'QmaxQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK' }
-HTTP/1.1 500 
+HTTP/1.1 500
 Content-Type: application/json
 
 {
@@ -123,16 +125,6 @@ Content-Type: application/json
 
 ```http
 GET api/resolve/-81,-108
-HTTP/1.1 403 FORBIDDEN
-Content-Type: application/json
-
-{
-  "error": "Parcel (-81,-108) is blacklisted"
-}
-```
-
-```http
-GET api/resolve/-81,-108
 HTTP/1.1 404 Not found
 Content-Type: application/json
 
@@ -153,23 +145,14 @@ Content-Type: stream
  GET api/get/QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK/filename
  HTTP/1.1 200 OK
  Content-Type: stream
- ```
- 
- ```http
-  GET api/get/QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK/subfolder/filename
-  HTTP/1.1 200 OK
-  Content-Type: stream
-  ```
- ```http
+```
+
+```http
  GET api/get/QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK/subfolder/filename
- HTTP/1.1 403 FORBIDDEN
- Content-Type: application/json
- 
- {
-   "error": "IPFS QmexQCWwaEdEDWrMArR2T2g3V4RGvXXiXj6HgWfRBCumDK is blacklisted"
- }
- ```
-  
+ HTTP/1.1 200 OK
+ Content-Type: stream
+```
+
 Notice you cannot get node, only leaf.
 
 ## Usage with docker
@@ -189,4 +172,5 @@ npm run docker:aws:run
 ```
 
 ## Version
+
 2.0.0 - Refactor API gateways.

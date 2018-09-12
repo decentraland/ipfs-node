@@ -3,7 +3,6 @@ const execFile = require('child_process').execFile
 const createError = require('http-errors')
 const Ethereum = require('./ethereum')
 const DB = require('./database')
-const Blacklist = require('./blacklist')
 const S3Service = require('./S3Service')
 const { isMultihash } = require('./utils')
 
@@ -24,10 +23,7 @@ class Download {
       try {
         const ipfs = req.params.ipfs
         const file = req.params[0] ? `${ipfs}${req.params[0]}` : ipfs
-        await Blacklist.checkIPFS(ipfs)
-        return res.redirect(
-          `${process.env.S3_URL}/${process.env.S3_BUCKET}/${file}`
-        )
+        return res.redirect(`${process.env.S3_URL}/${process.env.S3_BUCKET}/${file}`)
       } catch (error) {
         next(error)
       }
@@ -78,10 +74,6 @@ class Download {
     this.resolve = async (req, res, next) => {
       try {
         const [x, y] = [req.params.x, req.params.y]
-        if (!req.query.force) {
-          // Force does not check if parcel is blacklisted
-          await Blacklist.checkParcel(x, y)
-        }
         const cachedResponse = await DB.getParcel(x, y)
         if (!cachedResponse) {
           throw createError(404, `Parcel ${x},${y} is not pinned`)
@@ -102,12 +94,10 @@ class Download {
         ipfs: entry.ipfs,
         ipns: entry.ipns,
         lastModified: entry.lastModified,
-        dependencies: entry.dependencies
-          .filter(dep => dep.type ? dep.type === 'file' : true)
-          .map(dep => {
-            const { type, ...data } = dep // eslint-disable-line 
-            return data
-          })
+        dependencies: entry.dependencies.filter(dep => (dep.type ? dep.type === 'file' : true)).map(dep => {
+          const { type, ...data } = dep // eslint-disable-line
+          return data
+        })
       }
     }
 
@@ -122,9 +112,7 @@ class Download {
           return reject(stderr)
         }
 
-        const match = stdout.match(
-          new RegExp('pinned ([a-zA-Z0-9]+) recursively')
-        )
+        const match = stdout.match(new RegExp('pinned ([a-zA-Z0-9]+) recursively'))
         console.log(stdout, match)
         if (!match) {
           reject(new Error('Can not pin: ' + ipfs))
@@ -136,78 +124,65 @@ class Download {
 
   static resolveIPNS(ipns) {
     return new Promise((resolve, reject) => {
-      execFile(
-        'ipfs',
-        ['name', 'resolve', '--nocache', ipns],
-        async (err, stdout, stderr) => {
-          let ipfs
-          if (err) {
-            console.log('dht', err)
-            // Check it with our dht
-            ipfs = await DB.getIPFS(ipns)
-            if (!ipfs) {
-              return reject(new Error(stderr))
-            } else {
-              return resolve(ipfs)
-            }
+      execFile('ipfs', ['name', 'resolve', '--nocache', ipns], async (err, stdout, stderr) => {
+        let ipfs
+        if (err) {
+          console.log('dht', err)
+          // Check it with our dht
+          ipfs = await DB.getIPFS(ipns)
+          if (!ipfs) {
+            return reject(new Error(stderr))
+          } else {
+            return resolve(ipfs)
           }
-
-          ipfs = stdout.substr(6, stdout.length - 7)
-          console.log('cmd ipfs', ipfs)
-          return resolve(ipfs)
         }
-      )
+
+        ipfs = stdout.substr(6, stdout.length - 7)
+        console.log('cmd ipfs', ipfs)
+        return resolve(ipfs)
+      })
     })
   }
 
   // Returns { [ipfs: string]: { src: string, ipfs: string, name: string } }
   static resolveDependencies(ipfs) {
     return new Promise((resolve, reject) => {
-      execFile(
-        'ipfs',
-        ['refs', '-r', '--format=<src> <dst> <linkname>', ipfs],
-        { maxBuffer: 1024 * 500 },
-        (err, stdout, stderr) => {
-          if (err) return reject(new Error(stderr))
-          const dependencies = stdout
-            .split(/\r?\n/)
-            .filter(row => row)
-            .map(
-              row =>
-                row
-                  .replace(/\s+/g, ' ')
-                  .trim()
-                  .split(' ') // row format: src | ipfsHash | name
-            )
-            .reduce((dependencies, data) => {
-              if (data.length > 2) {
-                dependencies[data[1]] = {
-                  src: data[0],
-                  ipfs: data[1],
-                  name: data.slice(2, data.length).join(' ') // files with spaces in the name
-                }
+      execFile('ipfs', ['refs', '-r', '--format=<src> <dst> <linkname>', ipfs], { maxBuffer: 1024 * 500 }, (err, stdout, stderr) => {
+        if (err) return reject(new Error(stderr))
+        const dependencies = stdout
+          .split(/\r?\n/)
+          .filter(row => row)
+          .map(
+            row =>
+              row
+                .replace(/\s+/g, ' ')
+                .trim()
+                .split(' ') // row format: src | ipfsHash | name
+          )
+          .reduce((dependencies, data) => {
+            if (data.length > 2) {
+              dependencies[data[1]] = {
+                src: data[0],
+                ipfs: data[1],
+                name: data.slice(2, data.length).join(' ') // files with spaces in the name
               }
-              return dependencies
-            }, {})
+            }
+            return dependencies
+          }, {})
 
-          return resolve(dependencies)
-        }
-      )
+        return resolve(dependencies)
+      })
     })
   }
 
   static connectPeer(peerId) {
     return new Promise((resolve, reject) => {
-      execFile(
-        'ipfs',
-        ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`],
-        err => {
-          if (err) {
-            return reject(new Error('Could not connect to peer: ' + peerId))
-          }
-          return resolve()
+      execFile('ipfs', ['swarm', 'connect', `/p2p-circuit/ipfs/${peerId}`], err => {
+        if (err) {
+          return reject(new Error('Could not connect to peer: ' + peerId))
         }
-      )
+        return resolve()
+      })
     })
   }
 
@@ -215,28 +190,30 @@ class Download {
   static async getDependencyList(rootHash, dependencies) {
     let deps = []
 
-    await Promise.all(Object.values(dependencies).map(async dep => {
-      // If we have a parent
-      if (dep.src.trim().length) {
-        let path = ''
+    await Promise.all(
+      Object.values(dependencies).map(async dep => {
+        // If we have a parent
+        if (dep.src.trim().length) {
+          let path = ''
 
-        // If the parent is the root hash, we are done
-        if (dep.src === rootHash) {
-          path = `/${dep.name}`
+          // If the parent is the root hash, we are done
+          if (dep.src === rootHash) {
+            path = `/${dep.name}`
+          } else {
+            // If the parent is something else, we will find the absolute path up until rootHash
+            path = Download.resolvePath(dep.ipfs, dependencies, rootHash)
+          }
+          const fileMetadata = await Download.getFileMetadata(rootHash + path)
+          console.log('checking if', path, 'is directory', fileMetadata)
+
+          if (fileMetadata) {
+            deps.push({ ...dep, path, size: fileMetadata.size, contentType: fileMetadata.contentType })
+          }
         } else {
-          // If the parent is something else, we will find the absolute path up until rootHash
-          path = Download.resolvePath(dep.ipfs, dependencies, rootHash)
+          console.log(`Skipping malformed parent ipfs hash: "${dep.src}"`)
         }
-        const fileMetadata = await Download.getFileMetadata(rootHash + path)
-        console.log('checking if', path, 'is directory', fileMetadata)
-
-        if (fileMetadata) {
-          deps.push({ ...dep, path, size: fileMetadata.size, contentType: fileMetadata.contentType })
-        }
-      } else {
-        console.log(`Skipping malformed parent ipfs hash: "${dep.src}"`)
-      }
-    }))
+      })
+    )
 
     return deps
   }
@@ -244,19 +221,18 @@ class Download {
   // Agus is going to shout at me for this one.. I don't know a better way
   static getFileMetadata(path) {
     return new Promise((resolve, reject) => {
-      request
-        .get(`http://localhost:8080/ipfs/${path}`, (e, response, body) => {
-          console.log('Trying to download', path)
-          if (!response.headers['accept-ranges']) {
-            // ^ Directories don't contain this header
-            resolve(null)
-          } else {
-            resolve({
-              size: parseInt(response.headers['content-length'], 10) || 0,
-              contentType: response.headers['content-type'],
-            })
-          }
-        })
+      request.get(`http://localhost:8080/ipfs/${path}`, (e, response, body) => {
+        console.log('Trying to download', path)
+        if (!response.headers['accept-ranges']) {
+          // ^ Directories don't contain this header
+          resolve(null)
+        } else {
+          resolve({
+            size: parseInt(response.headers['content-length'], 10) || 0,
+            contentType: response.headers['content-type']
+          })
+        }
+      })
     })
   }
 

@@ -26,8 +26,7 @@ describe('S3Service', () => {
     const inStream = new stream.Readable()
     inStream.push('ABCDEFGHIJKLM')
     inStream.push(null)
-
-    fileExist = ctx.stub(S3Service, 'fileExist').callsFake(() => false)
+    fileExist = ctx.stub(S3Service, 'fileExists').callsFake(() => false)
     upload = ctx.stub(S3Service, 'upload').callsFake((name, resolve) => {
       const s = new stream.PassThrough()
       setTimeout(() => resolve(), 5)
@@ -45,21 +44,15 @@ describe('S3Service', () => {
     it('should upload files', async () => {
       await S3Service.uploadProject(ipfs, dependencies)
 
-      expect(
-        fileExist.callCount,
-        'expect fileExist to be called 4 times'
-      ).to.be.equal(4)
+      expect(fileExist.callCount, 'expect fileExist to be called 4 times').to.be.equal(6)
 
-      expect(upload.callCount, 'expect upload to be called').to.be.equal(4)
+      expect(upload.callCount, 'expect upload to be called').to.be.equal(6)
     })
 
     it('should not upload files cause they exist', async () => {
       fileExist.returns(true)
       await S3Service.uploadProject(ipfs, dependencies)
-      expect(
-        fileExist.callCount,
-        'expect fileExist to be called 4 times'
-      ).to.be.equal(4)
+      expect(fileExist.callCount, 'expect fileExist to be called 4 times').to.be.equal(6)
 
       expect(upload.callCount, 'expect upload to be called').to.be.equal(0)
     })

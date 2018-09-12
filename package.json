@@ -7,7 +7,7 @@
     "pretest": "npm run lint",
     "lint": "./node_modules/eslint/bin/eslint.js .",
     "lint:fix": "./node_modules/eslint/bin/eslint.js --fix .",
-    "test": "NODE_ENV=test nyc mocha  --timeout 120000 --exit",
+    "test": "NODE_ENV=test nyc mocha  --timeout 300000 --exit",
     "start": "nodemon src/server.js",
     "build:image": "docker build --no-cache -t ipfs-node .",
     "precommit": "lint-staged"

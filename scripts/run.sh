@@ -12,7 +12,6 @@ AWS_ACCESS_KEY_ID=$(sudo aws --profile default configure get aws_access_key_id)
 AWS_SECRET_ACCESS_KEY=$(sudo aws --profile default configure get aws_secret_access_key)
 LAND_REGISTRY_CONTRACT_ADDRESS=0x7a73483784ab79257bb11b96fd62a2c3ae4fb75b
 RPC_URL=https://ropsten.infura.io/
-BLACKLIST_URL=http://ec2-34-237-52-249.compute-1.amazonaws.com/api
 REDIS_HOST=redis.vmryun.0001.use1.cache.amazonaws.com
 REDIS_PORT=6379
 S3_BUCKET=ipfs.decentraland.zone
@@ -26,7 +25,6 @@ docker run -t -p 3000:3000  \
     -e "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" \
     -e "LAND_REGISTRY_CONTRACT_ADDRESS=$LAND_REGISTRY_CONTRACT_ADDRESS" \
     -e "RPC_URL=$RPC_URL" \
-    -e "BLACKLIST_URL=$BLACKLIST_URL" \
     -e "REDIS_HOST=$REDIS_HOST" \
     -e "REDIS_PORT=$REDIS_PORT" \
     -e "S3_BUCKET=$S3_BUCKET" \

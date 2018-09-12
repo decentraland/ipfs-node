@@ -21,13 +21,10 @@ let getContracts // use for ethereum.js to get parcel metadata
 
 describe('Ethereum', () => {
   beforeEach(() => {
-    process.env.BLACKLIST_URL = 'http://blacklist.com/api'
     getContracts = ctx.stub(web3Eth, 'getContract').callsFake(() => ({
       landData: () => 'metadata'
     }))
-    decodeLandData = ctx
-      .stub(LANDRegistry, 'decodeLandData')
-      .callsFake(() => ({ ipns: `ipns:${ipns}` }))
+    decodeLandData = ctx.stub(LANDRegistry, 'decodeLandData').callsFake(() => ({ ipns: `ipns:${ipns}` }))
   })
 
   afterEach(() => {
@@ -37,8 +34,7 @@ describe('Ethereum', () => {
   describe('connectBlockchain', () => {
     it('should connect', async () => {
       process.env.RPC_URL = 'https://ropsten.infura.io/'
-      expect(Ethereum.connectBlockchain(), 'expect connectBlockchain').to.be
-        .fulfilled
+      expect(Ethereum.connectBlockchain(), 'expect connectBlockchain').to.be.fulfilled
     })
 
     it('should retry to connect', async () => {
@@ -48,10 +44,7 @@ describe('Ethereum', () => {
       process.env.RPC_URL = 'https://ropsten.infura.io/'
       await new Promise(r =>
         setTimeout(() => {
-          expect(
-            web3Connect.calledTwice,
-            'expect web3Eth.connect to be called twice'
-          ).be.true
+          expect(web3Connect.calledTwice, 'expect web3Eth.connect to be called twice').be.true
           r()
         }, 4000)
       )
@@ -65,10 +58,7 @@ describe('Ethereum', () => {
 
     it('should return IPNS not found if parcel has not IPNS', async () => {
       decodeLandData.callsFake(() => '')
-      expect(
-        Ethereum.getIPNS(x, y),
-        'expect IPNS not found exception'
-      ).be.rejectedWith('IPNS not found')
+      expect(Ethereum.getIPNS(x, y), 'expect IPNS not found exception').be.rejectedWith('IPNS not found')
     })
   })
 })
